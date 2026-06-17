@@ -6,11 +6,33 @@
 #include <sstream>
 #include <cmath>
 #include <numeric>
-#include <algorithm> // Needed for std::max_element
+#include <algorithm>
 
 namespace Fontana {
-    TensorEngine::TensorEngine() {}
-    TensorEngine::~TensorEngine() {}
+
+    class EmbeddingLayer {
+    private:
+        int vocab_size;
+        int embedding_dim;
+        std::vector<std::vector<float>> embedding_table;
+
+    public:
+        EmbeddingLayer(int v_size, int e_dim) : vocab_size(v_size), embedding_dim(e_dim) {
+            embedding_table.resize(vocab_size, std::vector<float>(embedding_dim, 0.0f));
+            for (int i = 0; i < vocab_size; ++i) {
+                for (int j = 0; j < embedding_dim; ++j) {
+                    embedding_table[i][j] = std::cos(i * j) * 0.5f;
+                }
+            }
+        }
+
+        std::vector<float> lookup(int token_id) {
+            if (token_id < 0 || token_id >= vocab_size) {
+                return std::vector<float>(embedding_dim, 0.0f);
+            }
+            return embedding_table[token_id];
+        }
+    };
 
     class ActivationLayer {
     public:
@@ -31,32 +53,37 @@ namespace Fontana {
         }
     };
 
-    // This function now returns the single best next token ID predicted by the matrix
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
-        if (tokens.empty()) return 3; // Default to [EOS] if empty
+        if (tokens.empty()) return 3; // Default to [EOS]
 
+        EmbeddingLayer embed(80, 4);
         WeightMatrix neural_gate(80, 4);
         neural_gate.initialize_weights();
         ActivationLayer activation;
 
-        // Fetch the raw weights for the absolute LAST token in the current sentence
         int last_token = tokens.back();
-        std::vector<float> raw_weights = neural_gate.forward_layer(last_token);
 
-        // Pass it through Softmax to get percentages
-        std::vector<float> token_probabilities = activation.softmax(raw_weights);
+        std::vector<float> embedded_vector = embed.lookup(last_token);
+        std::vector<float> matrix_weights = neural_gate.forward_layer(last_token);
 
-        // Find the index of the highest probability value (ArgMax)
+        std::vector<float> raw_scores(4, 0.0f);
+        for (int j = 0; j < 4; ++j) {
+            raw_scores[j] = embedded_vector[j] * matrix_weights[j];
+        }
+
+        std::vector<float> token_probabilities = activation.softmax(raw_scores);
+
         auto max_iter = std::max_element(token_probabilities.begin(), token_probabilities.end());
         int predicted_token_id = std::distance(token_probabilities.begin(), max_iter);
 
         return predicted_token_id;
     }
 
-    // Keep our older process method alive for backward logging compatibility
-    void TensorEngine::process_tokens(const std::vector<int>& tokens) {
-        // Log display code managed by engine script
-    }
+    void TensorEngine::process_tokens(const std::vector<int>& tokens) {}
+
+    // FIXED: Placed constructor and destructor at the absolute base of the class definitions
+    TensorEngine::TensorEngine() {}
+    TensorEngine::~TensorEngine() {}
 }
 
 int main() {
@@ -71,10 +98,7 @@ int main() {
         }
 
         Fontana::TensorEngine engine;
-        // Calculate the next token math
         int next_token = engine.predict_next_token(received_tokens);
-
-        // CRUCIAL: Print ONLY the raw numerical integer ID back to the Linux stream for Python
         std::cout << next_token << std::endl;
     }
     return 0;
