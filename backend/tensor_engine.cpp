@@ -6,26 +6,23 @@
 #include <sstream>
 #include <cmath>
 #include <numeric>
+#include <algorithm> // Needed for std::max_element
 
 namespace Fontana {
-    // FIXED: Added missing constructor and destructor implementations back for the linker
     TensorEngine::TensorEngine() {}
     TensorEngine::~TensorEngine() {}
 
     class ActivationLayer {
     public:
-        // Softmax converts raw fractional vectors into clean probability distributions (0.0 to 1.0)
         std::vector<float> softmax(const std::vector<float>& raw_scores) {
             std::vector<float> probabilities(raw_scores.size());
             float sum_exp = 0.0f;
 
-            // 1. Calculate the exponential of each score to eliminate negative numbers
             for (size_t i = 0; i < raw_scores.size(); ++i) {
                 probabilities[i] = std::exp(raw_scores[i]);
                 sum_exp += probabilities[i];
             }
 
-            // 2. Normalize by dividing each element by the total sum
             for (size_t i = 0; i < probabilities.size(); ++i) {
                 probabilities[i] /= sum_exp;
             }
@@ -34,31 +31,31 @@ namespace Fontana {
         }
     };
 
-    void TensorEngine::process_tokens(const std::vector<int>& tokens) {
-        std::cout << "[FONTANA C++ ENGINE] Processing continuous stream of " << tokens.size() << " tokens." << std::endl;
+    // This function now returns the single best next token ID predicted by the matrix
+    int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
+        if (tokens.empty()) return 3; // Default to [EOS] if empty
 
         WeightMatrix neural_gate(80, 4);
         neural_gate.initialize_weights();
         ActivationLayer activation;
 
-        std::cout << "\n[FONTANA NEURAL NET PROBABILITIES (SOFTMAX)]:" << std::endl;
+        // Fetch the raw weights for the absolute LAST token in the current sentence
+        int last_token = tokens.back();
+        std::vector<float> raw_weights = neural_gate.forward_layer(last_token);
 
-        // Loop through our live tokens, fetch their weights, and pass them through Softmax
-        for (size_t i = 0; i < tokens.size(); ++i) {
-            int current_token = tokens[i];
-            std::vector<float> raw_weights = neural_gate.forward_layer(current_token);
+        // Pass it through Softmax to get percentages
+        std::vector<float> token_probabilities = activation.softmax(raw_weights);
 
-            // Fire the vector down the Softmax activation pipeline
-            std::vector<float> token_probabilities = activation.softmax(raw_weights);
+        // Find the index of the highest probability value (ArgMax)
+        auto max_iter = std::max_element(token_probabilities.begin(), token_probabilities.end());
+        int predicted_token_id = std::distance(token_probabilities.begin(), max_iter);
 
-            std::cout << "  Token Index [" << i << "] ID: " << current_token << " -> Probability Matrix: [";
-            for (float prob : token_probabilities) {
-                // Format output to show clean percentage arrays
-                std::cout << " " << std::round(prob * 100.0f) << "%";
-            }
-            std::cout << " ]" << std::endl;
-        }
-        std::cout << "\n[FONTANA O³ PATH] Activation layer processing matrix complete." << std::endl;
+        return predicted_token_id;
+    }
+
+    // Keep our older process method alive for backward logging compatibility
+    void TensorEngine::process_tokens(const std::vector<int>& tokens) {
+        // Log display code managed by engine script
     }
 }
 
@@ -74,7 +71,11 @@ int main() {
         }
 
         Fontana::TensorEngine engine;
-        engine.process_tokens(received_tokens);
+        // Calculate the next token math
+        int next_token = engine.predict_next_token(received_tokens);
+
+        // CRUCIAL: Print ONLY the raw numerical integer ID back to the Linux stream for Python
+        std::cout << next_token << std::endl;
     }
     return 0;
 }
