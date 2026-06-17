@@ -1,6 +1,8 @@
 #include "weight_matrix.hpp"
 #include <iostream>
+#include <vector>
 #include <cmath>
+#include <random> // Added for high-quality hardware random seeding
 
 namespace Fontana {
     WeightMatrix::WeightMatrix(int v_size, int e_dim)
@@ -11,15 +13,17 @@ namespace Fontana {
     WeightMatrix::~WeightMatrix() {}
 
     void WeightMatrix::initialize_weights() {
-        // COMMENTED OUT: Staging text removed to protect Python data stream
-        // std::cout << "[FONTANA MATRIX] Generating native..." << std::endl;
+        // Setup a standard hardware random device seed
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        // Distribute weights evenly between -0.5 and 0.5 (standard AI initialization)
+        std::uniform_real_distribution<float> dis(-0.5f, 0.5f);
 
         for (int i = 0; i < vocab_size; ++i) {
             for (int j = 0; j < embedding_dim; ++j) {
-                matrix[i][j] = std::sin(i + j) * 0.1f;
+                matrix[i][j] = dis(gen); // FIXED: Matrix is now seeded randomly!
             }
         }
-        // std::cout << "[FONTANA O³ PATH] Verified..." << std::endl;
     }
 
     std::vector<float> WeightMatrix::forward_layer(int token_id) {
