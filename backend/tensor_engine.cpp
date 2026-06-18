@@ -7,7 +7,7 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
-#include <random>
+#include <random> // Required for our stochastic dice roller engine
 
 namespace Fontana {
 
@@ -86,7 +86,6 @@ namespace Fontana {
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
         if (tokens.empty()) return 3; // Default to [EOS]
 
-        // FIXED: Expanded spatial dimensions to full 96-vocab scale to prevent tensor over-saturation loops
         int vocab_size = 96;
         int embed_dim = 96;
 
@@ -121,10 +120,16 @@ namespace Fontana {
             raw_scores[i] = score;
         }
 
-        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.7f);
+        // Softmax with 0.8 temperature for optimal text variation spacing
+        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.8f);
 
-        auto max_iter = std::max_element(token_probabilities.begin(), token_probabilities.end());
-        int predicted_token_id = std::distance(token_probabilities.begin(), max_iter);
+        // FIXED: Replaced rigid ArgMax with a Stochastic Dice Roller (Weighted Selection)
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        // Discrete distribution uses the probability array values directly to weight the dice roll
+        std::discrete_distribution<int> dice_roller(token_probabilities.begin(), token_probabilities.end());
+
+        int predicted_token_id = dice_roller(gen); // Roll the weighted digital dice!
 
         return predicted_token_id;
     }
