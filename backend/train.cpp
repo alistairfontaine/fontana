@@ -14,7 +14,7 @@ namespace Fontana {
     public:
         LocalTrainer(int v_size, int e_dim) : vocab_size(v_size), embedding_dim(e_dim) {}
 
-        void train_on_sequence(const std::vector<int>& tokens, const std::string& weights_path) {
+               void train_on_sequence(const std::vector<int>& tokens, const std::string& weights_path) {
             WeightMatrix neural_gate(vocab_size, embedding_dim);
 
             if (!neural_gate.load_from_disk(weights_path)) {
@@ -28,12 +28,12 @@ namespace Fontana {
                 int next_token = tokens[i + 1];
 
                 if (current_token >= 0 && current_token < vocab_size && next_token >= 0 && next_token < vocab_size) {
-                    // FIXED: Captures the reference explicitly using '&'
                     std::vector<float>& current_weights = neural_gate.forward_layer(current_token);
 
                     for (int j = 0; j < embedding_dim; ++j) {
-                        current_weights[j] += 0.8f;
-                        if (current_weights[j] > 5.0f) current_weights[j] = 5.0f;
+                        // FIXED: Balanced learning rate to prevent token over-saturation loops
+                        current_weights[j] += 0.05f;
+                        if (current_weights[j] > 1.0f) current_weights[j] = 1.0f; // Stable ceiling boundary
                     }
                 }
             }
