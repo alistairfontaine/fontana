@@ -7,6 +7,7 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <random> // Ensure random library is active here as well
 
 namespace Fontana {
 
@@ -19,9 +20,15 @@ namespace Fontana {
     public:
         EmbeddingLayer(int v_size, int e_dim) : vocab_size(v_size), embedding_dim(e_dim) {
             embedding_table.resize(vocab_size, std::vector<float>(embedding_dim, 0.0f));
+
+            // FIXED: Set up high-quality hardware random seeding for the embedding space
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<float> dis(-0.5f, 0.5f);
+
             for (int i = 0; i < vocab_size; ++i) {
                 for (int j = 0; j < embedding_dim; ++j) {
-                    embedding_table[i][j] = std::cos(i * j) * 0.5f;
+                    embedding_table[i][j] = dis(gen); // Seeding coordinates randomly
                 }
             }
         }
@@ -81,7 +88,6 @@ namespace Fontana {
 
     void TensorEngine::process_tokens(const std::vector<int>& tokens) {}
 
-    // FIXED: Placed constructor and destructor at the absolute base of the class definitions
     TensorEngine::TensorEngine() {}
     TensorEngine::~TensorEngine() {}
 }
