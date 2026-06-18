@@ -42,16 +42,13 @@ namespace Fontana {
 
     class ActivationLayer {
     public:
-        // Softmax with Temperature scaling
         std::vector<float> softmax(const std::vector<float>& raw_scores, float temperature) {
             std::vector<float> probabilities(raw_scores.size());
             float sum_exp = 0.0f;
 
-            // Prevent dividing by zero if temperature is set too low
             if (temperature < 0.1f) temperature = 0.1f;
 
             for (size_t i = 0; i < raw_scores.size(); ++i) {
-                // Scale raw vectors by temperature before running exponentials
                 probabilities[i] = std::exp(raw_scores[i] / temperature);
                 sum_exp += probabilities[i];
             }
@@ -67,7 +64,8 @@ namespace Fontana {
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
         if (tokens.empty()) return 3; // Default to [EOS]
 
-        int vocab_size = 80;
+        // FIXED: Scaled vocab_size to 96 to open up access to our subword array channels!
+        int vocab_size = 96;
         int embed_dim = 4;
 
         EmbeddingLayer embed(vocab_size, embed_dim);
@@ -80,10 +78,8 @@ namespace Fontana {
         std::vector<float> embedded_vector = embed.lookup(last_token);
         std::vector<float> matrix_weights = neural_gate.forward_layer(last_token);
 
-        // FIXED: Expanded raw scores vector array container to scan all 80 vocabulary channels!
         std::vector<float> raw_scores(vocab_size, 0.0f);
 
-        // Compute scores across the entire vocabulary grid
         for (int i = 0; i < vocab_size; ++i) {
             std::vector<float> word_weights = neural_gate.forward_layer(i);
             float score = 0.0f;
@@ -93,7 +89,6 @@ namespace Fontana {
             raw_scores[i] = score;
         }
 
-        // Run Softmax with a default operational temperature configuration of 0.7
         std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.7f);
 
         auto max_iter = std::max_element(token_probabilities.begin(), token_probabilities.end());
