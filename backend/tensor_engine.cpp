@@ -88,7 +88,7 @@ namespace Fontana {
 
         int vocab_size = 96;
         int embed_dim = 96;
-        int context_window_size = 8; // Lookback window limit
+        int context_window_size = 8;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
         std::string embed_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_embeddings.bin";
@@ -107,8 +107,6 @@ namespace Fontana {
             neural_gate.save_to_disk(weights_file);
         }
 
-        // FIXED: FIXED CONTEXT MEMORY LAYER.
-        // We aggregate up to 8 tokens from our history to build a mean-pooled context token coordinate vector.
         std::vector<float> context_vector(embed_dim, 0.0f);
         int tokens_to_scan = std::min(context_window_size, (int)tokens.size());
         int start_idx = tokens.size() - tokens_to_scan;
@@ -119,7 +117,6 @@ namespace Fontana {
                 context_vector[j] += single_embed[j];
             }
         }
-        // Divide by total token count to complete the mean pool average allocation
         for (int j = 0; j < embed_dim; ++j) {
             context_vector[j] /= (float)tokens_to_scan;
         }
@@ -130,12 +127,13 @@ namespace Fontana {
             std::vector<float>& word_weights = neural_gate.forward_layer(i);
             float score = 0.0f;
             for (int j = 0; j < embed_dim; ++j) {
-                score += context_vector[j] * word_weights[j]; // Evaluate matrix against whole sentence context
+                score += context_vector[j] * word_weights[j];
             }
             raw_scores[i] = score;
         }
 
-        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.8f);
+        // FIXED: Dropped activation temperature from 0.8 to 0.3 to sharpen probability constraints
+        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.3f);
 
         std::random_device rd;
         std::mt19937 gen(rd());
