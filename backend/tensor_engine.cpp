@@ -7,7 +7,7 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
-#include <random> // Ensure random library is active here as well
+#include <random>
 
 namespace Fontana {
 
@@ -21,14 +21,13 @@ namespace Fontana {
         EmbeddingLayer(int v_size, int e_dim) : vocab_size(v_size), embedding_dim(e_dim) {
             embedding_table.resize(vocab_size, std::vector<float>(embedding_dim, 0.0f));
 
-            // FIXED: Set up high-quality hardware random seeding for the embedding space
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_real_distribution<float> dis(-0.5f, 0.5f);
 
             for (int i = 0; i < vocab_size; ++i) {
                 for (int j = 0; j < embedding_dim; ++j) {
-                    embedding_table[i][j] = dis(gen); // Seeding coordinates randomly
+                    embedding_table[i][j] = dis(gen);
                 }
             }
         }
@@ -43,12 +42,17 @@ namespace Fontana {
 
     class ActivationLayer {
     public:
-        std::vector<float> softmax(const std::vector<float>& raw_scores) {
+        // Softmax with Temperature scaling
+        std::vector<float> softmax(const std::vector<float>& raw_scores, float temperature) {
             std::vector<float> probabilities(raw_scores.size());
             float sum_exp = 0.0f;
 
+            // Prevent dividing by zero if temperature is set too low
+            if (temperature < 0.1f) temperature = 0.1f;
+
             for (size_t i = 0; i < raw_scores.size(); ++i) {
-                probabilities[i] = std::exp(raw_scores[i]);
+                // Scale raw vectors by temperature before running exponentials
+                probabilities[i] = std::exp(raw_scores[i] / temperature);
                 sum_exp += probabilities[i];
             }
 
@@ -63,8 +67,11 @@ namespace Fontana {
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
         if (tokens.empty()) return 3; // Default to [EOS]
 
-        EmbeddingLayer embed(80, 4);
-        WeightMatrix neural_gate(80, 4);
+        int vocab_size = 80;
+        int embed_dim = 4;
+
+        EmbeddingLayer embed(vocab_size, embed_dim);
+        WeightMatrix neural_gate(vocab_size, embed_dim);
         neural_gate.initialize_weights();
         ActivationLayer activation;
 
@@ -73,12 +80,21 @@ namespace Fontana {
         std::vector<float> embedded_vector = embed.lookup(last_token);
         std::vector<float> matrix_weights = neural_gate.forward_layer(last_token);
 
-        std::vector<float> raw_scores(4, 0.0f);
-        for (int j = 0; j < 4; ++j) {
-            raw_scores[j] = embedded_vector[j] * matrix_weights[j];
+        // FIXED: Expanded raw scores vector array container to scan all 80 vocabulary channels!
+        std::vector<float> raw_scores(vocab_size, 0.0f);
+
+        // Compute scores across the entire vocabulary grid
+        for (int i = 0; i < vocab_size; ++i) {
+            std::vector<float> word_weights = neural_gate.forward_layer(i);
+            float score = 0.0f;
+            for (int j = 0; j < embed_dim; ++j) {
+                score += embedded_vector[j] * word_weights[j];
+            }
+            raw_scores[i] = score;
         }
 
-        std::vector<float> token_probabilities = activation.softmax(raw_scores);
+        // Run Softmax with a default operational temperature configuration of 0.7
+        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.7f);
 
         auto max_iter = std::max_element(token_probabilities.begin(), token_probabilities.end());
         int predicted_token_id = std::distance(token_probabilities.begin(), max_iter);
