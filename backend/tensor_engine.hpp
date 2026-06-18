@@ -10,8 +10,8 @@ namespace Fontana {
         TensorEngine();
         ~TensorEngine();
 
-        // High-speed processing signature for your text token integers
         void process_tokens(const std::vector<int>& tokens);
+        int predict_next_token(const std::vector<int>& tokens);
     };
 }
 

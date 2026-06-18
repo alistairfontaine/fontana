@@ -8,6 +8,7 @@
 #include <numeric>
 #include <algorithm>
 #include <random>
+#include <fstream> // Required for persistent embedding storage streams
 
 namespace Fontana {
 
@@ -20,7 +21,9 @@ namespace Fontana {
     public:
         EmbeddingLayer(int v_size, int e_dim) : vocab_size(v_size), embedding_dim(e_dim) {
             embedding_table.resize(vocab_size, std::vector<float>(embedding_dim, 0.0f));
+        }
 
+        void initialize_random_embeddings() {
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_real_distribution<float> dis(-0.5f, 0.5f);
@@ -37,6 +40,28 @@ namespace Fontana {
                 return std::vector<float>(embedding_dim, 0.0f);
             }
             return embedding_table[token_id];
+        }
+
+        // Save the spatial coordinates mapping to local storage
+        bool save_to_disk(const std::string& filename) {
+            std::ofstream out_file(filename, std::ios::binary);
+            if (!out_file) return false;
+            for (int i = 0; i < vocab_size; ++i) {
+                out_file.write(reinterpret_cast<const char*>(embedding_table[i].data()), embedding_dim * sizeof(float));
+            }
+            out_file.close();
+            return true;
+        }
+
+        // Load the spatial coordinates layout back from your partition disk
+        bool load_from_disk(const std::string& filename) {
+            std::ifstream in_file(filename, std::ios::binary);
+            if (!in_file) return false;
+            for (int i = 0; i < vocab_size; ++i) {
+                in_file.read(reinterpret_cast<char*>(embedding_table[i].data()), embedding_dim * sizeof(float));
+            }
+            in_file.close();
+            return true;
         }
     };
 
@@ -64,20 +89,31 @@ namespace Fontana {
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
         if (tokens.empty()) return 3; // Default to [EOS]
 
-        // FIXED: Scaled vocab_size to 96 to open up access to our subword array channels!
         int vocab_size = 96;
         int embed_dim = 4;
 
+        // Locked absolute file mapping addresses on your storage partition
+        std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
+        std::string embed_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_embeddings.bin";
+
         EmbeddingLayer embed(vocab_size, embed_dim);
         WeightMatrix neural_gate(vocab_size, embed_dim);
-        neural_gate.initialize_weights();
         ActivationLayer activation;
+
+        // FIXED: Enforce multi-file structural order synchronization
+        if (!embed.load_from_disk(embed_file)) {
+            embed.initialize_random_embeddings();
+            embed.save_to_disk(embed_file);
+        }
+
+        if (!neural_gate.load_from_disk(weights_file)) {
+            neural_gate.initialize_weights();
+            neural_gate.save_to_disk(weights_file);
+        }
 
         int last_token = tokens.back();
 
         std::vector<float> embedded_vector = embed.lookup(last_token);
-        std::vector<float> matrix_weights = neural_gate.forward_layer(last_token);
-
         std::vector<float> raw_scores(vocab_size, 0.0f);
 
         for (int i = 0; i < vocab_size; ++i) {

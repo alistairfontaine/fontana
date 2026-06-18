@@ -2,24 +2,25 @@
 #define WEIGHT_MATRIX_HPP
 
 #include <vector>
+#include <string>
 
 namespace Fontana {
     class WeightMatrix {
     private:
         int vocab_size;
         int embedding_dim;
-        // Two-dimensional grid representing our neural connection weights
         std::vector<std::vector<float>> matrix;
 
     public:
         WeightMatrix(int v_size, int e_dim);
         ~WeightMatrix();
 
-        // Initializes the matrix weights with a controlled mathematical pattern
         void initialize_weights();
-
-        // Performs vector dot-product multiplication against an incoming token ID
         std::vector<float> forward_layer(int token_id);
+
+        // NEW: Direct file-system serialization protocols
+        bool save_to_disk(const std::string& filename);
+        bool load_from_disk(const std::string& filename);
     };
 }
 
