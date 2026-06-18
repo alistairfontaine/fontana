@@ -16,9 +16,10 @@ namespace Fontana {
         ~WeightMatrix();
 
         void initialize_weights();
-        std::vector<float> forward_layer(int token_id);
 
-        // NEW: Direct file-system serialization protocols
+        // FIXED: Added the '&' to return a direct memory reference instead of a copy
+        std::vector<float>& forward_layer(int token_id);
+
         bool save_to_disk(const std::string& filename);
         bool load_from_disk(const std::string& filename);
     };
