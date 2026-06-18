@@ -2,55 +2,94 @@ import re
 
 class FontanaTokenizer:
     def __init__(self):
-        # A lightweight vocabulary mapping characters and common tokens to unique integer IDs
-        # We start with basic ASCII mapping + specialized model control tokens
+        # Base control symbols
         self.vocab = {
-            "[PAD]": 0,   # Padding token
-            "[UNK]": 1,   # Unknown characters
-            "[BOS]": 2,   # Beginning of sentence
-            "[EOS]": 3,   # End of sentence
+            "[PAD]": 0,
+            "[UNK]": 1,
+            "[BOS]": 2,
+            "[EOS]": 3,
         }
 
-        # Build out a simple vocabulary pool dynamically using common characters
-        # This keeps our storage footprint tiny (a few kilobytes)
-        for i, char in enumerate(" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?_@#:-/"):
-            self.vocab[char] = i + 4 # Shift by 4 to preserve our control tokens
+        # Step 1: Add individual base characters cleanly
+        base_chars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?_@#:-/"
+        for i, char in enumerate(base_chars):
+            self.vocab[char] = i + 4
 
-        # Reverse vocabulary lookup to decode numbers back into human characters
+        # Step 2: NEW - Inject structural multi-character subwords and syllables directly into the index pool
+        # This allows our model engine to predict entire blocks of text chunks at zero storage cost!
+        subwords = [
+            'the',
+            'and',
+            'ing',
+            'ion',
+            'ent',
+            'pro',
+            'con',
+            'sta',
+            'font',
+            'brain',
+            'logic',
+            'tech',
+            'music',
+            'code',
+            'system',
+            'auto',
+            'fontana',
+            'istair',
+            's',
+            'i',
+            'a',
+            't',
+            'y'
+        ]
+
+        start_index = len(base_chars) + 4
+        for i, syllable in enumerate(subwords):
+            self.vocab[syllable] = start_index + i
+
+        # Establish inverse vocabulary dimensions for fast decoding loops
         self.inverse_vocab = {v: k for k, v in self.vocab.items()}
 
+        # Build an internal compilation regex sorting longest subwords first to prevent character splitting
+        sorted_patterns = sorted(list(self.vocab.keys()), key=len, reverse=True)
+        # Escape punctuation safely to prevent runtime system crash patterns
+        escaped_patterns = [re.escape(p) for p in sorted_patterns if p not in ["[PAD]", "[UNK]", "[BOS]", "[EOS]"]]
+        self.tokenizer_regex = re.compile("|".join(escaped_patterns))
+
     def encode(self, text: str) -> list[int]:
-        """Converts human text into a structured list of token integer IDs."""
-        tokens = [self.vocab["[BOS]"]] # Always begin with our Beginning of Sentence token
+        """Parses human sentences into optimized structural subword integer strings."""
+        tokens = [self.vocab["[BOS]"]]
 
-        for char in text:
-            if char in self.vocab:
-                tokens.append(self.vocab[char])
+        # Scan text streams and isolate matching subwords or fallback base characters
+        matches = self.tokenizer_regex.findall(text)
+
+        for segment in matches:
+            if segment in self.vocab:
+                tokens.append(self.vocab[segment])
             else:
-                tokens.append(self.vocab["[UNK]"]) # Handle characters outside our vocabulary
+                # Handle stray unmapped characters securely
+                for char in segment:
+                    tokens.append(self.vocab.get(char, self.vocab["[UNK]"]))
 
-        tokens.append(self.vocab["[EOS]"]) # Cap with our End of Sentence token
+        tokens.append(self.vocab["[EOS]"])
         return tokens
 
     def decode(self, token_ids: list[int]) -> str:
-        """Converts a sequence of token IDs back into human readable text."""
-        chars = []
+        """Decodes integer sequences back into fluid text phrases."""
+        segments = []
         for token_id in token_ids:
             if token_id in [self.vocab["[BOS]"], self.vocab["[EOS]"], self.vocab["[PAD]"]]:
-                continue # Skip formatting tokens during playback
-            chars.append(self.inverse_vocab.get(token_id, ""))
-        return "".join(chars)
+                continue
+            segments.append(self.inverse_vocab.get(token_id, ""))
+        return "".join(segments)
 
-# Standalone test block to verify your Python logic works immediately
 if __name__ == "__main__":
     tokenizer = FontanaTokenizer()
-    sample_text = "Project Fontana v1.0 initialized."
+    # Test text containing raw structural subwords
+    test_phrase = "the fontana system code is loading logic"
 
-    # Run encoder
-    encoded_ids = tokenizer.encode(sample_text)
-    print(f"[FONTANA TOKENIZER] Original Text: '{sample_text}'")
-    print(f"[FONTANA TOKENIZER] Encoded Token IDs: {encoded_ids}")
-
-    # Run decoder to ensure data integrity
-    decoded_text = tokenizer.decode(encoded_ids)
-    print(f"[FONTANA TOKENIZER] Decoded Verification: '{decoded_text}'")
+    encoded = tokenizer.encode(test_phrase)
+    print(f"[SUBWORD TEST] Raw Sentence: '{test_phrase}'")
+    print(f"[SUBWORD TEST] Encoded Array IDs: {encoded}")
+    print(f"[SUBWORD TEST] Decoded Verification: '{tokenizer.decode(encoded)}'")
+    print(f"[SUBWORD TEST] Total Vocabulary Dimensions: {len(tokenizer.vocab)} paths.")
