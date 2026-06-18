@@ -8,6 +8,7 @@
 #include <numeric>
 #include <algorithm>
 #include <random>
+#include <fstream>
 
 namespace Fontana {
 
@@ -86,8 +87,25 @@ namespace Fontana {
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
         if (tokens.empty()) return 3; // Default to [EOS]
 
-        int vocab_size = 96;
-        int embed_dim = 96;
+        // DYNAMIC BOUNDARY GATE PARSER
+        int vocab_size = 95; // Default safe baseline channel allocation
+        std::string meta_path = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/core/vocab_meta.json";
+        std::ifstream meta_file(meta_path);
+
+        if (meta_file.is_open()) {
+            std::string line;
+            if (std::getline(meta_file, line)) {
+                size_t pos = line.find("vocab_size\":");
+                if (pos != std::string::npos) { // FIXED: Changed nprint to npos
+                    std::string size_str = line.substr(pos + 12);
+                    size_str = size_str.substr(0, size_str.find("}"));
+                    vocab_size = std::stoi(size_str);
+                }
+            }
+            meta_file.close();
+        }
+
+        int embed_dim = vocab_size; // Match embedding dimensionality directly to vocabulary limits
         int context_window_size = 8;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
@@ -132,7 +150,6 @@ namespace Fontana {
             raw_scores[i] = score;
         }
 
-        // FIXED: Dropped activation temperature from 0.8 to 0.3 to sharpen probability constraints
         std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.3f);
 
         std::random_device rd;
