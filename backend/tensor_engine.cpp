@@ -8,7 +8,6 @@
 #include <numeric>
 #include <algorithm>
 #include <random>
-#include <fstream> // Required for persistent embedding storage streams
 
 namespace Fontana {
 
@@ -42,7 +41,6 @@ namespace Fontana {
             return embedding_table[token_id];
         }
 
-        // Save the spatial coordinates mapping to local storage
         bool save_to_disk(const std::string& filename) {
             std::ofstream out_file(filename, std::ios::binary);
             if (!out_file) return false;
@@ -53,7 +51,6 @@ namespace Fontana {
             return true;
         }
 
-        // Load the spatial coordinates layout back from your partition disk
         bool load_from_disk(const std::string& filename) {
             std::ifstream in_file(filename, std::ios::binary);
             if (!in_file) return false;
@@ -89,10 +86,10 @@ namespace Fontana {
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
         if (tokens.empty()) return 3; // Default to [EOS]
 
+        // FIXED: Expanded spatial dimensions to full 96-vocab scale to prevent tensor over-saturation loops
         int vocab_size = 96;
-        int embed_dim = 4;
+        int embed_dim = 96;
 
-        // Locked absolute file mapping addresses on your storage partition
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
         std::string embed_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_embeddings.bin";
 
@@ -100,7 +97,6 @@ namespace Fontana {
         WeightMatrix neural_gate(vocab_size, embed_dim);
         ActivationLayer activation;
 
-        // FIXED: Enforce multi-file structural order synchronization
         if (!embed.load_from_disk(embed_file)) {
             embed.initialize_random_embeddings();
             embed.save_to_disk(embed_file);
@@ -117,7 +113,7 @@ namespace Fontana {
         std::vector<float> raw_scores(vocab_size, 0.0f);
 
         for (int i = 0; i < vocab_size; ++i) {
-            std::vector<float> word_weights = neural_gate.forward_layer(i);
+            std::vector<float>& word_weights = neural_gate.forward_layer(i);
             float score = 0.0f;
             for (int j = 0; j < embed_dim; ++j) {
                 score += embedded_vector[j] * word_weights[j];
