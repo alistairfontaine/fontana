@@ -8,7 +8,7 @@ class FontanaGenerator:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.backend_path = os.path.join(os.path.dirname(script_dir), "backend", "tensor_engine_binary")
 
-    def generate_text(self, seed_text: str, max_new_tokens: int = 25):
+    def generate_text(self, seed_text: str, max_new_tokens: int = 40):
         print(f"[FONTANA LOGIC] Ingesting Seed text stream: '{seed_text}'")
         current_text = seed_text
 
@@ -32,7 +32,10 @@ class FontanaGenerator:
             try:
                 predicted_id = int(stdout_output.strip())
 
+                # FIXED: AUTOMATED STREAM TERMINATION GATE
+                # If the C++ discrete dice distribution hits token ID 3 ([EOS]), break the text synthesis instantly
                 if predicted_id == self.tokenizer.vocab["[EOS]"]:
+                    print(" [EOS]", end="", flush=True)
                     break
 
                 predicted_char = self.tokenizer.inverse_vocab.get(predicted_id, "")
@@ -47,4 +50,4 @@ class FontanaGenerator:
 
 if __name__ == "__main__":
     generator = FontanaGenerator()
-    generator.generate_text("Fontana", max_new_tokens=35)
+    generator.generate_text("Fontana", max_new_tokens=40)
