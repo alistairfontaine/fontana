@@ -85,9 +85,12 @@ namespace Fontana {
     };
 
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
-        if (tokens.empty()) return 3;
+        if (tokens.empty()) return 3; // Default to [EOS]
 
-        int vocab_size = 107; // Dynamic scale alignment tracker
+        // Reverted to raw token vector tracking to avoid trailing token clutter
+        const std::vector<int>& active_tokens = tokens;
+
+        int vocab_size = 107;
         std::string meta_path = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/core/vocab_meta.json";
         std::ifstream meta_file(meta_path);
 
@@ -104,8 +107,6 @@ namespace Fontana {
             meta_file.close();
         }
 
-        // FIXED: STEP 1 - OPEN THE MEGAPHONE
-        // Exploded embedding dimensional resolution from vocab size to a spacious 256 matrix coordinates space
         int embed_dim = 256;
         int context_window_size = 8;
 
@@ -127,11 +128,11 @@ namespace Fontana {
         }
 
         std::vector<float> context_vector(embed_dim, 0.0f);
-        int tokens_to_scan = std::min(context_window_size, (int)tokens.size());
-        int start_idx = tokens.size() - tokens_to_scan;
+        int tokens_to_scan = std::min(context_window_size, (int)active_tokens.size());
+        int start_idx = active_tokens.size() - tokens_to_scan;
 
-        for (int i = start_idx; i < (int)tokens.size(); ++i) {
-            std::vector<float> single_embed = embed.lookup(tokens[i]);
+        for (int i = start_idx; i < (int)active_tokens.size(); ++i) {
+            std::vector<float> single_embed = embed.lookup(active_tokens[i]);
             for (int j = 0; j < embed_dim; ++j) {
                 context_vector[j] += single_embed[j];
             }
@@ -150,7 +151,7 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            for (int t : tokens) {
+            for (int t : active_tokens) {
                 if (t == i) {
                     raw_scores[i] -= 1.5f;
                 }
@@ -159,23 +160,20 @@ namespace Fontana {
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.3f);
 
-        // FIXED: STEP 3 - SURGICAL TOP-K TRUNCATION FILTER GATE
-        // Rank all scores, extract the top 5 highest probability values, and wipe out the rest
-        int K = 5;
+        // FIXED: STEP 3 - TIGHTENED CONSTRAINT GATE
+        // Restricting the generation dice distributions to the top 2 absolute highest scoring token cells
+        int K = 2;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
-        // Sort indices based on their probability percentages descending
         std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
             return token_probabilities[a] > token_probabilities[b];
         });
 
-        // Loop past our K threshold boundary and hard-truncate trailing data cells to absolute zero
         for (int i = K; i < vocab_size; ++i) {
             token_probabilities[indices[i]] = 0.0f;
         }
 
-        // Re-normalize probabilities array so the top K candidates sum perfectly to 1.0 again
         float prob_sum = 0.0f;
         for (int i = 0; i < K; ++i) prob_sum += token_probabilities[indices[i]];
         for (int i = 0; i < K; ++i) token_probabilities[indices[i]] /= prob_sum;
@@ -188,6 +186,8 @@ namespace Fontana {
 
         return predicted_token_id;
     }
+
+    ///
 
     void TensorEngine::process_tokens(const std::vector<int>& tokens) {}
 

@@ -47,14 +47,15 @@ def launch_fontana_shell():
             if user_input.lower() == "/exit":
                 print("\n[SHUTDOWN] Saving system state... Terminating Fontana shell.")
                 break
-
             elif user_input.startswith("/generate "):
-                seed_phrase = user_input[10:].strip()
-                if not seed_phrase:
+                # Extract seed and forcefully append a trailing word-boundary space context
+                seed_phrase = user_input[10:].strip() + " "
+                if not seed_phrase.strip():
                     print("[SHELL ERROR] Usage: /generate <seed>")
                     continue
                 generator.generate_text(seed_phrase, max_new_tokens=25)
                 print("\n")
+
 
             elif user_input.startswith("/train "):
                 training_data = user_input[7:].strip()
