@@ -6,3 +6,4 @@ __pycache__/
 # Block all raw and cleaned screenplay text fragments permanently
 *script.txt
 dataset.txt
+novel*.txt
