@@ -14,9 +14,10 @@ if [ -f "backend/tensor_engine_binary" ]; then
 fi
 
 echo "[2/4] [COMPILING] Baking raw C++ code into machine binaries..."
-# Compile both the execution brain and the new learning engine binary
+# Compile the execution brain, standard trainer, and our new stride loader
 g++ -std=c++17 backend/tensor_engine.cpp -o backend/tensor_engine_binary
 g++ -std=c++17 backend/train.cpp -o backend/trainer_binary
+g++ -std=c++17 backend/train_optimized.cpp -o backend/trainer_optimized_binary
 
 if [ $? -eq 0 ]; then
     echo "[3/4] [SUCCESS] C++ backend compiled cleanly with zero errors."
