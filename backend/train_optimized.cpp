@@ -61,7 +61,7 @@ namespace Fontana {
                 int next_token = tokens[i];
                 int start_idx = std::max(0, (int)i - training_window_size);
 
-                if (i % 1000 == 0) {
+                if (i % 2000 == 0) { // Scaled loss check frequency for massive multi-script data sizes
                     std::vector<float> probs = compute_scores_and_softmax(mock_embed, neural_gate);
                     if (next_token >= 0 && next_token < vocab_size) {
                         float token_prob = std::max(probs[next_token], 1e-5f);
@@ -70,7 +70,7 @@ namespace Fontana {
                     }
                 }
 
-                if (i % 400 == 0) {
+                if (i % 1000 == 0) {
                     for (int v = 0; v < vocab_size; ++v) {
                         std::vector<float>& weights = neural_gate.forward_layer(v);
                         for (int d = 0; d < embedding_dim; ++d) {
@@ -103,14 +103,7 @@ namespace Fontana {
     };
 }
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cerr << "Usage: ./trainer_optimized <space_separated_token_ids>" << std::endl;
-        return 1;
-    }
-
-    // FIXED: DYNAMIC BOUNDARY GATE FOR MAIN RUNTIME
-    // Parses vocab_meta.json to perfectly align training tensor boundaries to Python limits
+int main() {
     int parsed_vocab_size = 95;
     std::string meta_path = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/core/vocab_meta.json";
     std::ifstream meta_file(meta_path);
@@ -128,13 +121,24 @@ int main(int argc, char* argv[]) {
         meta_file.close();
     }
 
+    // FIXED: FILE STREAM DATA INPUT BRIDGE
+    // Replaced argv text line stack reading with a fast, direct local disk file ingestion pipeline
     std::vector<int> tokens;
-    for (int i = 1; i < argc; ++i) {
-        tokens.push_back(std::stoi(argv[i]));
+    std::string token_file_path = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/core/training_tokens.txt";
+    std::ifstream token_file(token_file_path);
+
+    if (token_file.is_open()) {
+        int token_id;
+        while (token_file >> token_id) {
+            tokens.push_back(token_id);
+        }
+        token_file.close();
+    } else {
+        std::cerr << "[CRITICAL ERROR] Failed to locate core/training_tokens.txt stream!" << std::endl;
+        return 1;
     }
 
     std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
-    // Passes the dynamic parsed size layout variables flawlessly
     Fontana::OptimizedTrainer trainer(parsed_vocab_size, parsed_vocab_size);
     trainer.train_on_sequence(tokens, weights_file);
 
