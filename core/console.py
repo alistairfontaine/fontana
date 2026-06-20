@@ -2,15 +2,15 @@ import os
 import sys
 from generation import FontanaGenerator
 from train_link import FontanaTrainerLink
-from load_profile import FontanaProfileLoader # Direct load integration
+from load_profile import FontanaProfileLoader
 
 def launch_fontana_shell():
     generator = FontanaGenerator()
     trainer = FontanaTrainerLink()
-    loader = FontanaProfileLoader() # Instantiate the profile manager
+    loader = FontanaProfileLoader()
 
     print("==================================================")
-    print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v1.6")
+    print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v1.7")
     print("    AuDHD Multi-Prompt Live Hot-Swap Command Shell")
     print("==================================================")
     print("Commands:")
@@ -20,12 +20,21 @@ def launch_fontana_shell():
     print("  /exit             -> Terminate session safely")
     print("==================================================")
 
-    # List available profiles to prevent path errors
-    backup_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "weights_backup")
+    # FIXED: AUTOMATED HARD DRIVE SCANNER PIPELINE
+    # Scans the local partition backup directory to display fresh stashed profiles on-the-fly
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    backup_dir = os.path.join(os.path.dirname(script_dir), "weights_backup")
+
     if os.path.exists(backup_dir):
         files = os.listdir(backup_dir)
-        suffixes = sorted(list(set([f.replace("fontana_weights_", "").replace(".bin", "").replace("fontana_embeddings_", "") for f in files if f.endswith(".bin")])))
-        print(f"Stored Profiles on disk: {suffixes}")
+        # Extract unique suffix names by filtering string prefixes and file extensions cleanly
+        suffixes = sorted(list(set([
+            f.replace("fontana_weights_", "").replace(".bin", "").replace("fontana_embeddings_", "")
+            for f in files if f.endswith(".bin")
+        ])))
+        print(f"Active Stored Profiles on Disk: {suffixes}")
+    else:
+        print("Active Stored Profiles on Disk: []")
     print("==================================================\n")
 
     while True:
@@ -55,14 +64,12 @@ def launch_fontana_shell():
                 trainer.train_on_text(training_data)
                 print("[SHELL STATUS] Matrix weights scaled dynamically on disk.\n")
 
-            # FIXED: LIVE MIND HOT-SWAPPING DIRECTIVE
             elif user_input.startswith("/load "):
                 profile_suffix = user_input[6:].strip()
                 if not profile_suffix:
                     print("[SHELL ERROR] Usage: /load <profile_suffix>")
                     continue
 
-                # Execute file transformation dynamically on disk without crashing the RAM stream
                 success = loader.swap_active_profile(profile_suffix)
                 if success:
                     print(f"[SHELL STATUS] Fontana memory matrix hot-swapped onto profile: {profile_suffix.upper()}\n")
