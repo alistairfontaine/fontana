@@ -1,6 +1,6 @@
 import os
 import re
-import json # Added to stream JSON metadata across systems
+import json
 from memory_map import FontanaMemoryMap
 
 class FontanaVocabExpander:
@@ -9,10 +9,20 @@ class FontanaVocabExpander:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.tokenizer_path = os.path.join(script_dir, "tokenizer.py")
         self.meta_path = os.path.join(script_dir, "vocab_meta.json")
+        self.dataset_path = os.path.join(os.path.dirname(script_dir), "dataset.txt")
 
     def optimize_system_vocabulary(self):
-        discovered_pairs = self.mapper.extract_dynamic_subwords(top_n=8)
-        new_syllables = [item for item in discovered_pairs]
+        # FIXED: DYNAMIC SCALE-FACTOR INJECTOR
+        # Dynamically calculate token harvesting sweep depth based on text corpus size
+        target_top_n = 8
+        if os.path.exists(self.dataset_path):
+            file_size = os.path.getsize(self.dataset_path)
+            if file_size > 100000: # If corpus exceeds 100 Kilobytes, widen the dictionary sweep
+                target_top_n = 25
+
+        print(f"[FONTANA O³] Dynamic Vocab Sweep: Adjusting harvesting threshold to top_{target_top_n} patterns.")
+        discovered_pairs = self.mapper.extract_dynamic_subwords(top_n=target_top_n)
+        new_syllables = [item[0] for item in discovered_pairs if isinstance(item, tuple)]
 
         if not os.path.exists(self.tokenizer_path):
             return
@@ -33,19 +43,16 @@ class FontanaVocabExpander:
                 current_subwords.append(syllable)
                 added_count += 1
 
-        # Reconstruct the string array layout content cleanly
         new_list_string = ",\n            ".join([f"'{w}'" for w in current_subwords])
         updated_code = re.sub(r'subwords\s*=\s*\[.*?\]', f'subwords = [\n            {new_list_string}\n        ]', tokenizer_code, flags=re.DOTALL)
 
         with open(self.tokenizer_path, "w", encoding="utf-8") as f:
             f.write(updated_code)
 
-        # FIXED: Core Meta Sync. Dynamically calculate overall vocabulary paths
         from tokenizer import FontanaTokenizer
         t = FontanaTokenizer()
         total_vocab_size = len(t.vocab)
 
-        # Output the exact size boundary to a zero-overhead JSON lock file
         meta_data = {"vocab_size": total_vocab_size}
         with open(self.meta_path, "w", encoding="utf-8") as f:
             json.dump(meta_data, f)
