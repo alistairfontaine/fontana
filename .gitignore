@@ -1,9 +1,14 @@
 backend/tensor_engine_binary
 backend/test_engine_run
 __pycache__/
-__pycache__/
+*.bin
 *.pdf
-# Block all raw and cleaned screenplay text fragments permanently
 *script.txt
 dataset.txt
+
+# --- COMPLETE LOCAL DATA SANDBOX PROTECTION GATE ---
+# Permanently isolates all binary asset media, plain text books, and scratchpads
+*.epub
 novel*.txt
+training_tokens.txt
+
