@@ -46,7 +46,13 @@ class FontanaTokenizer:
             'ana',
             'tio',
             'sys',
-            'yst'
+            'yst',
+            'ook',
+            'loo',
+            'oks',
+            'ell',
+            'lli',
+            'ith'
         ]
 
         start_index = len(base_chars) + 4

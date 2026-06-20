@@ -1,37 +1,43 @@
 #!/bin/bash
 
-# --- FONTANA SCREENPLAY INGESTION PREPARATION PIPELINE ---
-# Extracts and cleans raw text from local PDF screenplays for dataset expansion
+# --- FONTANA MULTI-SCREENPLAY DATASET EXPANSION PIPELINE ---
+# Extracts and flattens multiple PDF scripts safely into our 30GB partition sandbox
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE}")/.." && pwd)"
 cd "$PROJECT_ROOT" || exit
 
 echo "=================================================="
-echo "🧭 [FONTANA INGEST] Initializing Screenplay Parser..."
+echo "🧭 [FONTANA INGEST] Initializing Multi-Script Parser..."
 echo "=================================================="
 
-if [ ! -f "screenplay.pdf" ]; then
-    echo "❌ [ERROR] screenplay.pdf not found in root folder!"
+# Process Screenplay 1
+if [ -f "screenplay.pdf" ]; then
+    echo "[1/4] [PARSING] Processing Primary Screenplay..."
+    pdftotext screenplay.pdf raw_script1.txt
+    cat raw_script1.txt | tr '[:upper:]' '[:lower:]' | tr -d '#*`\-\[\]\(\)\{\}\=\_\:\;\/\n' | tr -s ' ' >> dataset.txt
+    rm raw_script1.txt
+else
+    echo "[WARNING] Primary screenplay.pdf not found. Skipping."
+fi
+
+# Process Screenplay 2
+if [ -f "screenplay2.pdf" ]; then
+    echo "[2/4] [PARSING] Processing Secondary Trelby Screenplay..."
+    pdftotext screenplay2.pdf raw_script2.txt
+    cat raw_script2.txt | tr '[:upper:]' '[:lower:]' | tr -d '#*`\-\[\]\(\)\{\}\=\_\:\;\/\n' | tr -s ' ' >> dataset.txt
+    rm raw_script2.txt
+    echo " . " >> dataset.txt
+    echo "🌟 [SUCCESS] Secondary script integrated successfully."
+else
+    echo "❌ [ERROR] screenplay2.pdf not found in root folder!"
     exit 1
 fi
 
-echo "[1/3] [PARSING] Converting screenplay.pdf to raw text layout..."
-# Convert PDF to text, preserving structural spacing layout parameters
-pdftotext screenplay.pdf raw_script.txt
-
-echo "[2/3] [CLEANING] Polishing text streams and formatting structure chunks..."
-# Clean text: convert to lowercase, strip formatting noise, and normalize spaces
-cat raw_script.txt | tr '[:upper:]' '[:lower:]' | tr -d '#*`\-\[\]\(\)\{\}\=\_\:\;\/\n' | tr -s ' ' > cleaned_script.txt
-
-echo "[3/3] [APPENDING] Merging screenplay grammar blocks into active dataset.txt..."
-# Append the polished script corpus text directly to your primary training file
-cat cleaned_script.txt >> dataset.txt
-echo " . " >> dataset.txt
-
-# Clean up transient temporary scratchpad files to preserve your 30GB partition footprint
-rm raw_script.txt cleaned_script.txt
+echo "=================================================="
+echo "🚀 [3/4] [VOCAB EXPANSION] Regenerating Self-Evolving Vocabulary Map..."
+python3 core/expand_vocab.py
 
 echo "=================================================="
-echo "🌟 [SUCCESS] Screenplay fully integrated into dataset.txt."
-echo "             Ready for multi-epoch training passes!"
+echo "🌟 [4/4] [SUCCESS] All Screenplays Ingested and Unified."
+echo "             Ready for accelerated matrix training loops!"
 echo "=================================================="
