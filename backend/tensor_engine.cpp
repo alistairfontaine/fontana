@@ -85,10 +85,9 @@ namespace Fontana {
     };
 
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
-        if (tokens.empty()) return 3; // Default to [EOS]
+        if (tokens.empty()) return 3;
 
-        // DYNAMIC BOUNDARY GATE PARSER
-        int vocab_size = 95; // Default safe baseline channel allocation
+        int vocab_size = 107; // Dynamic scale alignment tracker
         std::string meta_path = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/core/vocab_meta.json";
         std::ifstream meta_file(meta_path);
 
@@ -96,7 +95,7 @@ namespace Fontana {
             std::string line;
             if (std::getline(meta_file, line)) {
                 size_t pos = line.find("vocab_size\":");
-                if (pos != std::string::npos) { // FIXED: Changed nprint to npos
+                if (pos != std::string::npos) {
                     std::string size_str = line.substr(pos + 12);
                     size_str = size_str.substr(0, size_str.find("}"));
                     vocab_size = std::stoi(size_str);
@@ -105,7 +104,9 @@ namespace Fontana {
             meta_file.close();
         }
 
-        int embed_dim = vocab_size; // Match embedding dimensionality directly to vocabulary limits
+        // FIXED: STEP 1 - OPEN THE MEGAPHONE
+        // Exploded embedding dimensional resolution from vocab size to a spacious 256 matrix coordinates space
+        int embed_dim = 256;
         int context_window_size = 8;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
@@ -148,9 +149,36 @@ namespace Fontana {
                 score += context_vector[j] * word_weights[j];
             }
             raw_scores[i] = score;
+
+            for (int t : tokens) {
+                if (t == i) {
+                    raw_scores[i] -= 1.5f;
+                }
+            }
         }
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.3f);
+
+        // FIXED: STEP 3 - SURGICAL TOP-K TRUNCATION FILTER GATE
+        // Rank all scores, extract the top 5 highest probability values, and wipe out the rest
+        int K = 5;
+        std::vector<size_t> indices(vocab_size);
+        std::iota(indices.begin(), indices.end(), 0);
+
+        // Sort indices based on their probability percentages descending
+        std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+            return token_probabilities[a] > token_probabilities[b];
+        });
+
+        // Loop past our K threshold boundary and hard-truncate trailing data cells to absolute zero
+        for (int i = K; i < vocab_size; ++i) {
+            token_probabilities[indices[i]] = 0.0f;
+        }
+
+        // Re-normalize probabilities array so the top K candidates sum perfectly to 1.0 again
+        float prob_sum = 0.0f;
+        for (int i = 0; i < K; ++i) prob_sum += token_probabilities[indices[i]];
+        for (int i = 0; i < K; ++i) token_probabilities[indices[i]] /= prob_sum;
 
         std::random_device rd;
         std::mt19937 gen(rd());

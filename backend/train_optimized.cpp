@@ -61,7 +61,7 @@ namespace Fontana {
                 int next_token = tokens[i];
                 int start_idx = std::max(0, (int)i - training_window_size);
 
-                if (i % 2000 == 0) { // Scaled loss check frequency for massive multi-script data sizes
+                if (i % 2000 == 0) {
                     std::vector<float> probs = compute_scores_and_softmax(mock_embed, neural_gate);
                     if (next_token >= 0 && next_token < vocab_size) {
                         float token_prob = std::max(probs[next_token], 1e-5f);
@@ -121,8 +121,6 @@ int main() {
         meta_file.close();
     }
 
-    // FIXED: FILE STREAM DATA INPUT BRIDGE
-    // Replaced argv text line stack reading with a fast, direct local disk file ingestion pipeline
     std::vector<int> tokens;
     std::string token_file_path = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/core/training_tokens.txt";
     std::ifstream token_file(token_file_path);
@@ -139,7 +137,8 @@ int main() {
     }
 
     std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
-    Fontana::OptimizedTrainer trainer(parsed_vocab_size, parsed_vocab_size);
+    // FIXED: STEP 1 UPGRADE - Cranking internal parameter limits from 96 directly to 256 embedding dimensions
+    Fontana::OptimizedTrainer trainer(parsed_vocab_size, 256);
     trainer.train_on_sequence(tokens, weights_file);
 
     return 0;
