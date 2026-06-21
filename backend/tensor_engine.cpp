@@ -106,7 +106,7 @@ namespace Fontana {
             meta_file.close();
         }
 
-        int embed_dim = 256;
+        int embed_dim = 512;
         int context_window_size = 8;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";

@@ -137,8 +137,8 @@ int main() {
     }
 
     std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
-    // FIXED: STEP 1 UPGRADE - Cranking internal parameter limits from 96 directly to 256 embedding dimensions
-    Fontana::OptimizedTrainer trainer(parsed_vocab_size, 256);
+    // FIXED: STEP 1 UPGRADE - Cranking internal parameter limits from 96 directly to 256 embedding dimensions // now 512
+    Fontana::OptimizedTrainer trainer(parsed_vocab_size, 512);
     trainer.train_on_sequence(tokens, weights_file);
 
     return 0;
