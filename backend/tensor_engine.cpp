@@ -85,9 +85,8 @@ namespace Fontana {
     };
 
     int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
-        if (tokens.empty()) return 3; // Default to [EOS]
+        if (tokens.empty()) return 3;
 
-        // Reverted to raw token vector tracking to avoid trailing token clutter
         const std::vector<int>& active_tokens = tokens;
 
         int vocab_size = 107;
@@ -151,17 +150,26 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
+            // Repetition Penalty Filter
             for (int t : active_tokens) {
                 if (t == i) {
                     raw_scores[i] -= 1.5f;
+                }
+            }
+
+            // FIXED: DYNAMIC TOKEN TYPE MASK FILTER GATE
+            // If the predicted index falls in the isolated letter zone, apply a structural penalty to suppress static
+            if (i >= 5 && i <= 76) {
+                // Keep useful basic punctuation marks clean while penalizing loose alphanumeric floating letters
+                if (i != 44 && i != 46 && i != 63) { // Preserve commas, full stops, and question marks
+                    raw_scores[i] -= 2.5f; // Suppress character noise pathways smoothly
                 }
             }
         }
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.3f);
 
-        // FIXED: STEP 3 - TIGHTENED CONSTRAINT GATE
-        // Restricting the generation dice distributions to the top 2 absolute highest scoring token cells
+        // STRICT TOP-K TRUNCATION FILTER GATE
         int K = 2;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
@@ -186,8 +194,6 @@ namespace Fontana {
 
         return predicted_token_id;
     }
-
-    ///
 
     void TensorEngine::process_tokens(const std::vector<int>& tokens) {}
 
