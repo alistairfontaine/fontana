@@ -150,27 +150,23 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // Repetition Penalty Filter
             for (int t : active_tokens) {
                 if (t == i) {
                     raw_scores[i] -= 1.5f;
                 }
             }
 
-            // FIXED: DYNAMIC TOKEN TYPE MASK FILTER GATE
-            // If the predicted index falls in the isolated letter zone, apply a structural penalty to suppress static
             if (i >= 5 && i <= 76) {
-                // Keep useful basic punctuation marks clean while penalizing loose alphanumeric floating letters
-                if (i != 44 && i != 46 && i != 63) { // Preserve commas, full stops, and question marks
-                    raw_scores[i] -= 2.5f; // Suppress character noise pathways smoothly
+                if (i != 44 && i != 46 && i != 63) {
+                    raw_scores[i] -= 2.5f;
                 }
             }
         }
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.3f);
 
-        // STRICT TOP-K TRUNCATION FILTER GATE
-        int K = 2;
+        // DUAL COMPONENT FILTER GATES: TOP-K EXPANDED TO WIDER BOUNDS
+        int K = 5;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
@@ -180,6 +176,22 @@ namespace Fontana {
 
         for (int i = K; i < vocab_size; ++i) {
             token_probabilities[indices[i]] = 0.0f;
+        }
+
+        // FIXED: ADDED NUCLEUS NATIVE TOP-P FILTER SLICER
+        // Loop through our sorted Top-K candidates and drop any that bypass our cumulative threshold
+        float cumulative_p = 0.0f;
+        float target_top_p = 0.90f; // 90% dynamic selection window ceiling
+
+        for (int i = 0; i < K; ++i) {
+            cumulative_p += token_probabilities[indices[i]];
+            if (cumulative_p > target_top_p) {
+                // Hard-truncate all secondary lower-probability indices past this limit to zero
+                for (int j = i + 1; j < K; ++j) {
+                    token_probabilities[indices[j]] = 0.0f;
+                }
+                break;
+            }
         }
 
         float prob_sum = 0.0f;
