@@ -69,7 +69,7 @@ namespace Fontana {
             std::vector<float> probabilities(raw_scores.size());
             float sum_exp = 0.0f;
 
-            if (temperature < 0.1f) temperature = 0.1f;
+            if (temperature < 0.05f) temperature = 0.05f;
 
             for (size_t i = 0; i < raw_scores.size(); ++i) {
                 probabilities[i] = std::exp(raw_scores[i] / temperature);
@@ -106,7 +106,7 @@ namespace Fontana {
             meta_file.close();
         }
 
-        int embed_dim = 512;
+        int embed_dim = 512; // Maintain high capacity
         int context_window_size = 8;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
@@ -150,23 +150,33 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
+            // Repetition Penalty Filter
             for (int t : active_tokens) {
                 if (t == i) {
                     raw_scores[i] -= 1.5f;
                 }
             }
 
+            // Single-Letter Character Suppression Mask
             if (i >= 5 && i <= 76) {
                 if (i != 44 && i != 46 && i != 63) {
                     raw_scores[i] -= 2.5f;
                 }
             }
+
+            // FIXED: STRUCTURAL CONTROL TOKEN SUPPRESSION GATE
+            // Aggressively penalize active [PAD] (0) and [UNK] (1) tokens to force clean word selections
+            if (i == 0 || i == 1) {
+                raw_scores[i] -= 10.0f;
+            }
         }
 
-        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.3f);
+        // FIXED: PRECISION TUNING STEP 1 - TEMPERATURE SLIDER COMPRESSION
+        // Scaled inference calculation temperature from 0.3f down to a hyper-focused 0.12f
+        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.12f);
 
-        // DUAL COMPONENT FILTER GATES: TOP-K EXPANDED TO WIDER BOUNDS
-        int K = 5;
+        // STRICT TOP-K TRUNCATION FILTER GATE
+        int K = 2;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
@@ -178,15 +188,13 @@ namespace Fontana {
             token_probabilities[indices[i]] = 0.0f;
         }
 
-        // FIXED: ADDED NUCLEUS NATIVE TOP-P FILTER SLICER
-        // Loop through our sorted Top-K candidates and drop any that bypass our cumulative threshold
+        // NUCLEUS TOP-P FILTER SLICER
         float cumulative_p = 0.0f;
-        float target_top_p = 0.90f; // 90% dynamic selection window ceiling
+        float target_top_p = 0.90f;
 
         for (int i = 0; i < K; ++i) {
             cumulative_p += token_probabilities[indices[i]];
             if (cumulative_p > target_top_p) {
-                // Hard-truncate all secondary lower-probability indices past this limit to zero
                 for (int j = i + 1; j < K; ++j) {
                     token_probabilities[indices[j]] = 0.0f;
                 }
