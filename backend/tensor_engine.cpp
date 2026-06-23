@@ -106,7 +106,7 @@ namespace Fontana {
             meta_file.close();
         }
 
-        int embed_dim = 512; // Maintain high capacity
+        int embed_dim = 512;
         int context_window_size = 8;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
@@ -150,32 +150,31 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // Repetition Penalty Filter
             for (int t : active_tokens) {
                 if (t == i) {
                     raw_scores[i] -= 1.5f;
                 }
             }
 
-            // Single-Letter Character Suppression Mask
             if (i >= 5 && i <= 76) {
                 if (i != 44 && i != 46 && i != 63) {
                     raw_scores[i] -= 2.5f;
                 }
             }
 
-            // FIXED: STRUCTURAL CONTROL TOKEN SUPPRESSION GATE
-            // Aggressively penalize active [PAD] (0) and [UNK] (1) tokens to force clean word selections
             if (i == 0 || i == 1) {
                 raw_scores[i] -= 10.0f;
             }
         }
 
-        // FIXED: PRECISION TUNING STEP 1 - TEMPERATURE SLIDER COMPRESSION
-        // Scaled inference calculation temperature from 0.3f down to a hyper-focused 0.12f
-        std::vector<float> token_probabilities = activation.softmax(raw_scores, 0.12f);
+        // FIXED: TEMPERATURE DECAY SCHEDULER LAYER
+        // Dynamically compress entropy as prompt context chain length increases to maximize clarity
+        float base_temperature = 0.12f;
+        float sequence_decay_factor = 0.005f * static_cast<float>(active_tokens.size());
+        float dynamic_temperature = std::max(0.05f, base_temperature - sequence_decay_factor);
 
-        // STRICT TOP-K TRUNCATION FILTER GATE
+        std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
+
         int K = 2;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
@@ -188,7 +187,6 @@ namespace Fontana {
             token_probabilities[indices[i]] = 0.0f;
         }
 
-        // NUCLEUS TOP-P FILTER SLICER
         float cumulative_p = 0.0f;
         float target_top_p = 0.90f;
 

@@ -84,8 +84,6 @@ class FontanaConsoleApp:
                     self.generator.generate_text(seed_phrase, max_new_tokens=self.max_tokens)
                     print("\n")
 
-                # FIXED: LIVE DISK RUNTIME CONTINUOUS LEARNING ENGINE
-                # Compresses incoming interactive text lines on-the-fly and slams them down to the C++ matrix paths
                 elif user_input.startswith("/train "):
                     training_data = user_input[7:].strip().lower()
                     if not training_data:
@@ -99,7 +97,6 @@ class FontanaConsoleApp:
                         print("[SHELL ERROR] Training context must contain at least 2 token parameters to align weights.\n")
                         continue
 
-                    # Stream text arrays down onto the local sandboxed scratchpad channel file
                     with open(self.token_file_path, "w", encoding="utf-8") as token_f:
                         token_f.write(" ".join(map(str, token_ids)))
 
@@ -131,9 +128,12 @@ class FontanaConsoleApp:
                     else:
                         print("[SHELL ERROR] Target profile swap failed.\n")
 
-                elif not user_input.startswith("/"):
-                    print(f"[SHELL ERROR] Invalid command syntax context. Did you forget a '/'?")
-                    print(f"              Type /help to view valid control structures.\n")
+                # FIXED: AUTOMATED SUBMENU INTERCEPTOR GATE
+                # Blocks invalid structural command strings from wasting RAM compute loops
+                elif not user_input.startswith("/") or user_input.split()[0] in ["load", "generate", "train", "length", "exit", "help"]:
+                    print(f"[SHELL ERROR] Invalid command format syntax. Did you forget a leading '/'?")
+                    self.print_help_menu()
+                    print("\n")
 
                 else:
                     print(f"[SHELL ERROR] Unknown command context. Use /generate, /length, /load, or /exit.\n")
