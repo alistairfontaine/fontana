@@ -1,15 +1,22 @@
 import os
 import sys
+import subprocess
 from generation import FontanaGenerator
 from train_link import FontanaTrainerLink
 from load_profile import FontanaProfileLoader
+from tokenizer import FontanaTokenizer
 
 class FontanaConsoleApp:
     def __init__(self):
         self.generator = FontanaGenerator()
         self.trainer = FontanaTrainerLink()
         self.loader = FontanaProfileLoader()
-        self.max_tokens = 25 # Dynamic length tracking state variable
+        self.tokenizer = FontanaTokenizer()
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.project_root = os.path.dirname(script_dir)
+        self.trainer_path = os.path.join(self.project_root, "backend", "trainer_optimized_binary")
+        self.token_file_path = os.path.join(script_dir, "training_tokens.txt")
+        self.max_tokens = 25
 
     def print_help_menu(self):
         print("\n==================================================")
@@ -25,14 +32,12 @@ class FontanaConsoleApp:
 
     def launch_shell(self):
         print("==================================================")
-        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v1.8")
+        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v1.9")
         print("    AuDHD Multi-Prompt Live Hot-Swap Command Shell")
         print("==================================================")
         self.print_help_menu()
 
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        backup_dir = os.path.join(os.path.dirname(script_dir), "weights_backup")
-
+        backup_dir = os.path.join(self.project_root, "weights_backup")
         if os.path.exists(backup_dir):
             files = os.listdir(backup_dir)
             suffixes = sorted(list(set([
@@ -58,7 +63,6 @@ class FontanaConsoleApp:
                     print("\n")
                     continue
 
-                # LIVE INFERENCE LENGTH MODIFIER GATE
                 elif user_input.startswith("/length "):
                     len_str = user_input[8:].strip()
                     try:
@@ -77,17 +81,43 @@ class FontanaConsoleApp:
                     if not seed_phrase.strip():
                         print("[SHELL ERROR] Usage: /generate <seed>\n")
                         continue
-                    # Passes the dynamically tracking length state variable cleanly
                     self.generator.generate_text(seed_phrase, max_new_tokens=self.max_tokens)
                     print("\n")
 
+                # FIXED: LIVE DISK RUNTIME CONTINUOUS LEARNING ENGINE
+                # Compresses incoming interactive text lines on-the-fly and slams them down to the C++ matrix paths
                 elif user_input.startswith("/train "):
-                    training_data = user_input[7:].strip()
+                    training_data = user_input[7:].strip().lower()
                     if not training_data:
                         print("[SHELL ERROR] Usage: /train <text>\n")
                         continue
-                    self.trainer.train_on_text(training_data)
-                    print("[SHELL STATUS] Matrix weights scaled dynamically on disk.\n")
+
+                    print(f"[LIVE TRAINING] Encapsulating text text stream...")
+                    token_ids = self.tokenizer.encode(training_data)
+
+                    if len(token_ids) < 2:
+                        print("[SHELL ERROR] Training context must contain at least 2 token parameters to align weights.\n")
+                        continue
+
+                    # Stream text arrays down onto the local sandboxed scratchpad channel file
+                    with open(self.token_file_path, "w", encoding="utf-8") as token_f:
+                        token_f.write(" ".join(map(str, token_ids)))
+
+                    print(f"[LIVE OPTIMIZATION] Invoking C++ matrix pipeline execution...")
+                    try:
+                        subprocess.run(
+                            [self.trainer_path],
+                            capture_output=True,
+                            text=True,
+                            check=True
+                        )
+                        print("[SHELL STATUS] Matrix weight fields adjusted dynamically in runtime memory tracks.\n")
+                    except subprocess.CalledProcessError as e:
+                        print(f"❌ [LIVE PIPELINE BREAK] C++ trainer rejected sequence. Details: {e}\n")
+
+                    if os.path.exists(self.token_file_path):
+                        os.remove(self.token_file_path)
+                    continue
 
                 elif user_input.startswith("/load "):
                     profile_suffix = user_input[6:].strip()
@@ -101,8 +131,6 @@ class FontanaConsoleApp:
                     else:
                         print("[SHELL ERROR] Target profile swap failed.\n")
 
-                # FIXED: VALIDATION GUARDRAIL
-                # Catch raw inputs missing leading slashes and block them from breaking RAM generation loops
                 elif not user_input.startswith("/"):
                     print(f"[SHELL ERROR] Invalid command syntax context. Did you forget a '/'?")
                     print(f"              Type /help to view valid control structures.\n")
