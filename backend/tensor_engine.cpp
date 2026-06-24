@@ -69,7 +69,7 @@ namespace Fontana {
             std::vector<float> probabilities(raw_scores.size());
             float sum_exp = 0.0f;
 
-            if (temperature < 0.05f) temperature = 0.05f;
+            if (temperature < 0.04f) temperature = 0.04f;
 
             for (size_t i = 0; i < raw_scores.size(); ++i) {
                 probabilities[i] = std::exp(raw_scores[i] / temperature);
@@ -107,7 +107,8 @@ namespace Fontana {
         }
 
         int embed_dim = 512;
-        int context_window_size = 8;
+        // CALIBRATED: Adjusted window gate lookback to 12 for optimal token history tracking balance
+        int context_window_size = 12;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
         std::string embed_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_embeddings.bin";
@@ -167,11 +168,10 @@ namespace Fontana {
             }
         }
 
-        // FIXED: TEMPERATURE DECAY SCHEDULER LAYER
-        // Dynamically compress entropy as prompt context chain length increases to maximize clarity
+        // CALIBRATED: Fine-tuned decay coefficients to safeguard creative momentum over long horizons
         float base_temperature = 0.12f;
-        float sequence_decay_factor = 0.005f * static_cast<float>(active_tokens.size());
-        float dynamic_temperature = std::max(0.05f, base_temperature - sequence_decay_factor);
+        float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
+        float dynamic_temperature = std::max(0.08f, base_temperature - sequence_decay_factor);
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
