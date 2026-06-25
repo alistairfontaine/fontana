@@ -13,7 +13,10 @@ class FontanaGenerator:
         current_text = seed_text
 
         print("[FONTANA STOCHASTIC RUN]: ", end="", flush=True)
-        print(seed_text, end="", flush=True)
+        print(seed_text.strip(), end="", flush=True)
+
+        # Suffix tracking list to manage formatting whitespace injection rules
+        suffixes = ["ing", "tion", "ent", "yst", "sta", "ook", "ine", "tio", "ste"]
 
         for _ in range(max_new_tokens):
             token_ids = self.tokenizer.encode(current_text)
@@ -32,15 +35,23 @@ class FontanaGenerator:
             try:
                 predicted_id = int(stdout_output.strip())
 
-                # FIXED: AUTOMATED STREAM TERMINATION GATE
-                # If the C++ discrete dice distribution hits token ID 3 ([EOS]), break the text synthesis instantly
+                if predicted_id == 0 or predicted_id == 1:
+                    break
+
                 if predicted_id == self.tokenizer.vocab["[EOS]"]:
                     print(" [EOS]", end="", flush=True)
                     break
 
                 predicted_char = self.tokenizer.inverse_vocab.get(predicted_id, "")
-                print(predicted_char, end="", flush=True)
 
+                # FIXED: STEP 1 - CUSTOM LINGUISTIC POST-PROCESSOR WHITE-SPACE INJECTOR
+                # Check if token is a known suffix. If it is a new word root, inject a space separator layout break.
+                if predicted_char.strip() and not any(predicted_char.startswith(s) for s in suffixes):
+                    if not current_text.endswith(" "):
+                        print(" ", end="", flush=True)
+                        current_text += " "
+
+                print(predicted_char, end="", flush=True)
                 current_text += predicted_char
 
             except ValueError:
@@ -50,4 +61,4 @@ class FontanaGenerator:
 
 if __name__ == "__main__":
     generator = FontanaGenerator()
-    generator.generate_text("Fontana", max_new_tokens=40)
+    generator.generate_text("Fontana ", max_new_tokens=40)

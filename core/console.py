@@ -16,6 +16,7 @@ class FontanaConsoleApp:
         self.project_root = os.path.dirname(script_dir)
         self.trainer_path = os.path.join(self.project_root, "backend", "trainer_optimized_binary")
         self.token_file_path = os.path.join(script_dir, "training_tokens.txt")
+        self.dataset_path = os.path.join(self.project_root, "dataset.txt")
         self.max_tokens = 25
 
     def print_help_menu(self):
@@ -24,7 +25,7 @@ class FontanaConsoleApp:
         print("==================================================")
         print("  /generate <seed>  -> Run stochastic text generation")
         print("  /length <num>     -> Scale dynamic token output bounds live")
-        print("  /train <text>     -> Train weights instantly on live context")
+        print("  /train <text>     -> Train weights and persist text to disk")
         print("  /load <suffix>    -> Hot-swap active memory profiles instantly")
         print("  /help             -> Print this operational dashboard manual")
         print("  /exit             -> Terminate session safely and freeze files")
@@ -32,7 +33,7 @@ class FontanaConsoleApp:
 
     def launch_shell(self):
         print("==================================================")
-        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v1.9")
+        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.0")
         print("    AuDHD Multi-Prompt Live Hot-Swap Command Shell")
         print("==================================================")
         self.print_help_menu()
@@ -84,13 +85,19 @@ class FontanaConsoleApp:
                     self.generator.generate_text(seed_phrase, max_new_tokens=self.max_tokens)
                     print("\n")
 
+                # FIXED: STEP 2 - PERSISTENT IN-SHELL CONTINUOUS LEARNING HARVESTER
                 elif user_input.startswith("/train "):
                     training_data = user_input[7:].strip().lower()
                     if not training_data:
                         print("[SHELL ERROR] Usage: /train <text>\n")
                         continue
 
-                    print(f"[LIVE TRAINING] Encapsulating text text stream...")
+                    # Permanently append custom interactive dialog sequence to the root corpus database
+                    if os.path.exists(self.dataset_path):
+                        with open(self.dataset_path, "a", encoding="utf-8") as dataset_f:
+                            dataset_f.write("\n" + training_data)
+
+                    print(f"[LIVE TRAINING] Encapsulating persistent text stream...")
                     token_ids = self.tokenizer.encode(training_data)
 
                     if len(token_ids) < 2:
@@ -108,7 +115,7 @@ class FontanaConsoleApp:
                             text=True,
                             check=True
                         )
-                        print("[SHELL STATUS] Matrix weight fields adjusted dynamically in runtime memory tracks.\n")
+                        print("[SHELL STATUS] Matrix weight fields adjusted permanently. Text appended to dataset.txt.\n")
                     except subprocess.CalledProcessError as e:
                         print(f"❌ [LIVE PIPELINE BREAK] C++ trainer rejected sequence. Details: {e}\n")
 
@@ -128,9 +135,7 @@ class FontanaConsoleApp:
                     else:
                         print("[SHELL ERROR] Target profile swap failed.\n")
 
-                # FIXED: AUTOMATED SUBMENU INTERCEPTOR GATE
-                # Blocks invalid structural command strings from wasting RAM compute loops
-                elif not user_input.startswith("/") or user_input.split()[0] in ["load", "generate", "train", "length", "exit", "help"]:
+                elif not user_input.startswith("/") or user_input.split() in ["load", "generate", "train", "length", "exit", "help"]:
                     print(f"[SHELL ERROR] Invalid command format syntax. Did you forget a leading '/'?")
                     self.print_help_menu()
                     print("\n")
