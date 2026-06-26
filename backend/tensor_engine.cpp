@@ -150,13 +150,21 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // FIXED: REPETITION PENALTY HISTORY SKIP GATE
-            // Only apply repetition penalties to tokens generated *after* the initial seed prompt length
-            // This stops the initial seed words from getting over-penalized and choking on Step 1
-            if (active_tokens.size() > 2) {
-                for (size_t t = 2; t < active_tokens.size(); ++t) {
+            // FIXED: REPETITION PENALTY GLOBAL INTERATION FILTER GATE
+            // We check the sequence array size. If we are on Step 1 (size <= 3 due to BOS + seed + trailing space),
+            // we safely apply a targeted penalty strictly to the current token to prevent immediate loop traps.
+            // Once generation advances past Step 1, it runs a full history check to break B and Q repetition loops.
+            if (active_tokens.size() > 3) {
+                for (size_t t = 3; t < active_tokens.size(); ++t) {
                     if (active_tokens[t] == i) {
-                        raw_scores[i] -= 1.5f;
+                        raw_scores[i] -= 2.0f; // Reinforced loop-shattering penalty step
+                    }
+                }
+            } else {
+                // Safeguard Step 1: Prevent immediate token-echo loops from choking the initial seed word
+                for (int t : active_tokens) {
+                    if (t == i) {
+                        raw_scores[i] -= 0.5f;
                     }
                 }
             }
