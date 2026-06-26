@@ -1,5 +1,7 @@
 backend/tensor_engine_binary
 backend/test_engine_run
+backend/trainer_binary
+backend/trainer_optimized_binary
 __pycache__/
 *.bin
 *.pdf

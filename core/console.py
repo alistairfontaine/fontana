@@ -33,7 +33,7 @@ class FontanaConsoleApp:
 
     def launch_shell(self):
         print("==================================================")
-        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.0")
+        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.1")
         print("    AuDHD Multi-Prompt Live Hot-Swap Command Shell")
         print("==================================================")
         self.print_help_menu()
@@ -64,8 +64,11 @@ class FontanaConsoleApp:
                     print("\n")
                     continue
 
-                elif user_input.startswith("/length "):
-                    len_str = user_input[8:].strip()
+                elif user_input.startswith("/length"):
+                    len_str = user_input[7:].strip()
+                    if not len_str:
+                        print("[SHELL ERROR] Parameter missing. Usage: /length <integer_value>\n")
+                        continue
                     try:
                         new_len = int(len_str)
                         if 5 <= new_len <= 150:
@@ -74,25 +77,25 @@ class FontanaConsoleApp:
                         else:
                             print("[SHELL ERROR] Length bounds must fall strictly between 5 and 150 tokens.\n")
                     except ValueError:
-                        print("[SHELL ERROR] Usage: /length <integer_value>\n")
+                        print("[SHELL ERROR] Invalid format type. Usage: /length <integer_value>\n")
                     continue
 
-                elif user_input.startswith("/generate "):
-                    seed_phrase = user_input[10:].strip() + " "
-                    if not seed_phrase.strip():
-                        print("[SHELL ERROR] Usage: /generate <seed>\n")
+                elif user_input.startswith("/generate"):
+                    seed_phrase = user_input[9:].strip()
+                    if not seed_phrase:
+                        print("[SHELL ERROR] Seed phrase missing. Usage: /generate <seed_phrase>\n")
                         continue
-                    self.generator.generate_text(seed_phrase, max_new_tokens=self.max_tokens)
+                    # Format dynamic whitespace padding context
+                    seed_phrase_padded = seed_phrase + " "
+                    self.generator.generate_text(seed_phrase_padded, max_new_tokens=self.max_tokens)
                     print("\n")
 
-                # FIXED: STEP 2 - PERSISTENT IN-SHELL CONTINUOUS LEARNING HARVESTER
-                elif user_input.startswith("/train "):
-                    training_data = user_input[7:].strip().lower()
+                elif user_input.startswith("/train"):
+                    training_data = user_input[6:].strip().lower()
                     if not training_data:
-                        print("[SHELL ERROR] Usage: /train <text>\n")
+                        print("[SHELL ERROR] Text payload missing. Usage: /train <dialogue_sequence>\n")
                         continue
 
-                    # Permanently append custom interactive dialog sequence to the root corpus database
                     if os.path.exists(self.dataset_path):
                         with open(self.dataset_path, "a", encoding="utf-8") as dataset_f:
                             dataset_f.write("\n" + training_data)
@@ -123,17 +126,17 @@ class FontanaConsoleApp:
                         os.remove(self.token_file_path)
                     continue
 
-                elif user_input.startswith("/load "):
-                    profile_suffix = user_input[6:].strip()
+                elif user_input.startswith("/load"):
+                    profile_suffix = user_input[5:].strip()
                     if not profile_suffix:
-                        print("[SHELL ERROR] Usage: /load <profile_suffix>\n")
+                        print("[SHELL ERROR] Profile name missing. Usage: /load <profile_suffix>\n")
                         continue
 
                     success = self.loader.swap_active_profile(profile_suffix)
                     if success:
                         print(f"[SHELL STATUS] Fontana memory matrix hot-swapped onto profile: {profile_suffix.upper()}\n")
                     else:
-                        print("[SHELL ERROR] Target profile swap failed.\n")
+                        print("[SHELL ERROR] Target profile swap failed. Verify label name.\n")
 
                 elif not user_input.startswith("/") or user_input.split() in ["load", "generate", "train", "length", "exit", "help"]:
                     print(f"[SHELL ERROR] Invalid command format syntax. Did you forget a leading '/'?")
