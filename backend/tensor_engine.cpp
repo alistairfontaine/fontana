@@ -107,7 +107,6 @@ namespace Fontana {
         }
 
         int embed_dim = 512;
-        // CALIBRATED: Adjusted window gate lookback to 12 for optimal token history tracking balance
         int context_window_size = 12;
 
         std::string weights_file = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/fontana_weights.bin";
@@ -151,9 +150,14 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            for (int t : active_tokens) {
-                if (t == i) {
-                    raw_scores[i] -= 1.5f;
+            // FIXED: REPETITION PENALTY HISTORY SKIP GATE
+            // Only apply repetition penalties to tokens generated *after* the initial seed prompt length
+            // This stops the initial seed words from getting over-penalized and choking on Step 1
+            if (active_tokens.size() > 2) {
+                for (size_t t = 2; t < active_tokens.size(); ++t) {
+                    if (active_tokens[t] == i) {
+                        raw_scores[i] -= 1.5f;
+                    }
                 }
             }
 
@@ -168,10 +172,9 @@ namespace Fontana {
             }
         }
 
-        // CALIBRATED: Fine-tuned decay coefficients to safeguard creative momentum over long horizons
         float base_temperature = 0.12f;
         float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
-        float dynamic_temperature = std::max(0.08f, base_temperature - sequence_decay_factor);
+        float dynamic_temperature = std::max(0.095f, base_temperature - sequence_decay_factor);
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
