@@ -174,8 +174,9 @@ namespace Fontana {
                     raw_scores[i] -= 2.5f;
                 }
             }
-
-            if (i == 0 || i == 1) {
+            // FIXED: STRUCTURAL CONTROL & BOUNDARY TOKEN SUPPRESSION GATE
+            // Aggressively penalize active [PAD] (0), [UNK] (1), and [BOS] (2) tokens to prevent layout bleed loops
+            if (i == 0 || i == 1 || i == 2) {
                 raw_scores[i] -= 10.0f;
             }
         }
@@ -199,7 +200,7 @@ namespace Fontana {
         }
 
         float cumulative_p = 0.0f;
-        float target_top_p = 0.90f;
+        float target_top_p = 0.92f;
 
         for (int i = 0; i < K; ++i) {
             cumulative_p += token_probabilities[indices[i]];
