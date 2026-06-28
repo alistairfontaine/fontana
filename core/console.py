@@ -33,7 +33,7 @@ class FontanaConsoleApp:
 
     def launch_shell(self):
         print("==================================================")
-        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.1")
+        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.3")
         print("    AuDHD Multi-Prompt Live Hot-Swap Command Shell")
         print("==================================================")
         self.print_help_menu()
@@ -85,7 +85,6 @@ class FontanaConsoleApp:
                     if not seed_phrase:
                         print("[SHELL ERROR] Seed phrase missing. Usage: /generate <seed_phrase>\n")
                         continue
-                    # Format dynamic whitespace padding context
                     seed_phrase_padded = seed_phrase + " "
                     self.generator.generate_text(seed_phrase_padded, max_new_tokens=self.max_tokens)
                     print("\n")
@@ -94,6 +93,14 @@ class FontanaConsoleApp:
                     training_data = user_input[6:].strip().lower()
                     if not training_data:
                         print("[SHELL ERROR] Text payload missing. Usage: /train <dialogue_sequence>\n")
+                        continue
+
+                    # FIXED: STEP 2 - INPUT VALIDATION GATE FOR PARAMETER COUNTS
+                    # Split input into word chunks and enforce a safe 4-word operational boundary limit
+                    word_count = len(training_data.split())
+                    if word_count < 4:
+                        print(f"[SHELL ERROR] Incomplete context trajectory detected ({word_count} words).")
+                        print(f"              Training payload must contain at least 4 full structural words.\n")
                         continue
 
                     if os.path.exists(self.dataset_path):
