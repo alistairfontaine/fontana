@@ -150,18 +150,14 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // FIXED: REPETITION PENALTY GLOBAL INTERATION FILTER GATE
-            // We check the sequence array size. If we are on Step 1 (size <= 3 due to BOS + seed + trailing space),
-            // we safely apply a targeted penalty strictly to the current token to prevent immediate loop traps.
-            // Once generation advances past Step 1, it runs a full history check to break B and Q repetition loops.
+            // Repetition penalty tracking system layer
             if (active_tokens.size() > 3) {
                 for (size_t t = 3; t < active_tokens.size(); ++t) {
                     if (active_tokens[t] == i) {
-                        raw_scores[i] -= 2.0f; // Reinforced loop-shattering penalty step
+                        raw_scores[i] -= 2.0f;
                     }
                 }
             } else {
-                // Safeguard Step 1: Prevent immediate token-echo loops from choking the initial seed word
                 for (int t : active_tokens) {
                     if (t == i) {
                         raw_scores[i] -= 0.5f;
@@ -174,16 +170,22 @@ namespace Fontana {
                     raw_scores[i] -= 2.5f;
                 }
             }
-            // FIXED: STRUCTURAL CONTROL & BOUNDARY TOKEN SUPPRESSION GATE
-            // Aggressively penalize active [PAD] (0), [UNK] (1), and [BOS] (2) tokens to prevent layout bleed loops
+
             if (i == 0 || i == 1 || i == 2) {
                 raw_scores[i] -= 10.0f;
             }
         }
 
-        float base_temperature = 0.12f;
-        float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
-        float dynamic_temperature = std::max(0.095f, base_temperature - sequence_decay_factor);
+        // FIXED: STEP 1 - TEMPERATURE BOUNDARY HARD-LOCK GATE
+        // Enforce a strict piecewise boundary constraint: compress Step 1 initialization loops
+        // to a rigid 0.06f slot to permanently choke out alpha-character stutters (N, y, P).
+        float dynamic_temperature = 0.12f;
+        if (active_tokens.size() <= 4) {
+            dynamic_temperature = 0.06f;
+        } else {
+            float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
+            dynamic_temperature = std::max(0.095f, 0.12f - sequence_decay_factor);
+        }
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
@@ -200,7 +202,7 @@ namespace Fontana {
         }
 
         float cumulative_p = 0.0f;
-        float target_top_p = 0.92f;
+        float target_top_p = 0.90f;
 
         for (int i = 0; i < K; ++i) {
             cumulative_p += token_probabilities[indices[i]];
