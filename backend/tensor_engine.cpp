@@ -150,11 +150,12 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // Repetition penalty tracking system layer
+            // FIXED: HARMONIC LINEAR RECIPROCAL REPETITION DECAY GATE
             if (active_tokens.size() > 3) {
                 for (size_t t = 3; t < active_tokens.size(); ++t) {
                     if (active_tokens[t] == i) {
-                        raw_scores[i] -= 2.0f;
+                        float distance = static_cast<float>(active_tokens.size() - 1 - t);
+                        raw_scores[i] -= (2.5f / (1.0f + 0.15f * distance));
                     }
                 }
             } else {
@@ -176,12 +177,9 @@ namespace Fontana {
             }
         }
 
-        // FIXED: STEP 1 - TEMPERATURE BOUNDARY HARD-LOCK GATE
-        // Enforce a strict piecewise boundary constraint: compress Step 1 initialization loops
-        // to a rigid 0.06f slot to permanently choke out alpha-character stutters (N, y, P).
         float dynamic_temperature = 0.12f;
         if (active_tokens.size() <= 4) {
-            dynamic_temperature = 0.06f;
+            dynamic_temperature = 0.075f;
         } else {
             float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
             dynamic_temperature = std::max(0.095f, 0.12f - sequence_decay_factor);
@@ -233,6 +231,7 @@ namespace Fontana {
     TensorEngine::~TensorEngine() {}
 }
 
+// FIXED: INJECTED CRITICAL SUBPROCESS MAIN ENTRY TERMINATION POINT
 int main() {
     std::string input_line;
     if (std::getline(std::cin, input_line)) {
