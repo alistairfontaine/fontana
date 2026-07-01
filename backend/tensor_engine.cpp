@@ -9,6 +9,10 @@
 #include <algorithm>
 #include <random>
 #include <fstream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace Fontana {
 
@@ -166,8 +170,7 @@ namespace Fontana {
                 }
             }
 
-            // FIXED: STEP 1 - TIGHTENED CHARACTER SUPPRESSION MASK
-            // Crushed single-character zone penalty from -2.5f to -4.5f to surgically purge tracking static (i, s, t)
+            // Tightened character suppression mask
             if (i >= 5 && i <= 76) {
                 if (i != 44 && i != 46 && i != 63) {
                     raw_scores[i] -= 4.5f;
@@ -201,9 +204,14 @@ namespace Fontana {
             token_probabilities[indices[i]] = 0.0f;
         }
 
-        float cumulative_p = 0.0f;
-        float target_top_p = 0.90f;
+        // FIXED: CREATIVE ROADMAP STEP 1 - NATIVE C++ ADAPTIVE TOP-P DECAY SCHEDULER
+        // Dynamically widen our nucleus selection pool ceiling as the sentence sequence stretches
+        // to completely eliminate word starvation and maximize vocabulary creative variety.
+        float base_top_p = 0.90f;
+        float context_expansion_factor = 0.001f * static_cast<float>(active_tokens.size());
+        float target_top_p = std::min(0.95f, base_top_p + context_expansion_factor);
 
+        float cumulative_p = 0.0f;
         for (int i = 0; i < K; ++i) {
             cumulative_p += token_probabilities[indices[i]];
             if (cumulative_p > target_top_p) {
@@ -234,8 +242,31 @@ namespace Fontana {
 }
 
 int main() {
-    std::string input_line;
-    if (std::getline(std::cin, input_line)) {
+    std::string rx_pipe = "/tmp/fontana_rx.fifo";
+    std::string tx_pipe = "/tmp/fontana_tx.fifo";
+
+    unlink(rx_pipe.c_str());
+    unlink(tx_pipe.c_str());
+
+    mkfifo(rx_pipe.c_str(), 0666);
+    mkfifo(tx_pipe.c_str(), 0666);
+
+    std::cout << "🧭 [FONTANA DAEMON] Service loop initialized. Listening on IPC channels..." << std::endl;
+
+    Fontana::TensorEngine engine;
+
+    while (true) {
+        int rx_fd = open(rx_pipe.c_str(), O_RDONLY);
+        if (rx_fd < 0) continue;
+
+        char buffer[1024]; // Explicit safe message track buffer
+        ssize_t bytes_read = read(rx_fd, buffer, sizeof(buffer) - 1);
+        close(rx_fd);
+
+        if (bytes_read <= 0) continue;
+        buffer[bytes_read] = '\0';
+
+        std::string input_line(buffer);
         std::vector<int> received_tokens;
         std::stringstream ss(input_line);
         int token_id;
@@ -244,9 +275,14 @@ int main() {
             received_tokens.push_back(token_id);
         }
 
-        Fontana::TensorEngine engine;
         int next_token = engine.predict_next_token(received_tokens);
-        std::cout << next_token << std::endl;
+
+        int tx_fd = open(tx_pipe.c_str(), O_WRONLY);
+        if (tx_fd >= 0) {
+            std::string out_str = std::to_string(next_token) + "\n";
+            write(tx_fd, out_str.c_str(), out_str.size());
+            close(tx_fd);
+        }
     }
     return 0;
 }

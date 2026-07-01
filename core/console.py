@@ -18,12 +18,15 @@ class FontanaConsoleApp:
         self.token_file_path = os.path.join(script_dir, "training_tokens.txt")
         self.dataset_path = os.path.join(self.project_root, "dataset.txt")
         self.max_tokens = 25
+        # FIXED: CREATIVE ROADMAP STEP 2 - INTERACTIVE PROMPT HISTORY CACHE LAYER
+        self.history_cache = []
 
     def print_help_menu(self):
         print("\n==================================================")
         print("🧭 FONTANA CORE CONSOLE COMMAND MANUAL")
         print("==================================================")
         print("  /generate <seed>  -> Run stochastic text generation")
+        print("  /history          -> Review stashed prompt memory tracking traces")
         print("  /length <num>     -> Scale dynamic token output bounds live")
         print("  /train            -> Enter MULTILINE dialogue training stream mode")
         print("  /load <suffix>    -> Hot-swap active memory profiles instantly")
@@ -33,7 +36,7 @@ class FontanaConsoleApp:
 
     def launch_shell(self):
         print("==================================================")
-        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.4")
+        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.5")
         print("    AuDHD Multi-Prompt Live Hot-Swap Command Shell")
         print("==================================================")
         self.print_help_menu()
@@ -64,6 +67,17 @@ class FontanaConsoleApp:
                     print("\n")
                     continue
 
+                # FIXED: HISTORY MEMORY COGNITIVE LOOKUP ENDPOINT
+                elif user_input.lower() == "/history":
+                    print("\n🧭 [PROMPT MEMORY CACHE LOOKUP TRACKS]:")
+                    if not self.history_cache:
+                        print("  [STATUS] No prompts stashed in this tracking block yet.\n")
+                    else:
+                        for idx, item in enumerate(self.history_cache, 1):
+                            print(f"  [{idx}] '{item}'")
+                        print("\n")
+                    continue
+
                 elif user_input.startswith("/length"):
                     len_str = user_input[7:].strip()
                     if not len_str:
@@ -85,11 +99,15 @@ class FontanaConsoleApp:
                     if not seed_phrase:
                         print("[SHELL ERROR] Seed phrase missing. Usage: /generate <seed_phrase>\n")
                         continue
+
+                    # Cache the active generation run into our memory tracking pool
+                    if seed_phrase not in self.history_cache:
+                        self.history_cache.append(seed_phrase)
+
                     seed_phrase_padded = seed_phrase + " "
                     self.generator.generate_text(seed_phrase_padded, max_new_tokens=self.max_tokens)
                     print("\n")
 
-                # FIXED: STEP 2 - MULTILINE DIALOG INTERCEPTOR STREAM CAPTURE ENGINE
                 elif user_input.lower() == "/train":
                     print("\n[MULTILINE MODE] Paste script blocks below. Press ENTER on an empty line to compile training:")
                     print("--------------------------------------------------------------------------------")
