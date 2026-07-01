@@ -25,7 +25,7 @@ class FontanaConsoleApp:
         print("==================================================")
         print("  /generate <seed>  -> Run stochastic text generation")
         print("  /length <num>     -> Scale dynamic token output bounds live")
-        print("  /train <text>     -> Train weights and persist text to disk")
+        print("  /train            -> Enter MULTILINE dialogue training stream mode")
         print("  /load <suffix>    -> Hot-swap active memory profiles instantly")
         print("  /help             -> Print this operational dashboard manual")
         print("  /exit             -> Terminate session safely and freeze files")
@@ -33,7 +33,7 @@ class FontanaConsoleApp:
 
     def launch_shell(self):
         print("==================================================")
-        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.3")
+        print("🧭 THE FONTANA ENGINE CORE INTERACTIVE SHELL v2.4")
         print("    AuDHD Multi-Prompt Live Hot-Swap Command Shell")
         print("==================================================")
         self.print_help_menu()
@@ -89,18 +89,25 @@ class FontanaConsoleApp:
                     self.generator.generate_text(seed_phrase_padded, max_new_tokens=self.max_tokens)
                     print("\n")
 
-                elif user_input.startswith("/train"):
-                    training_data = user_input[6:].strip().lower()
+                # FIXED: STEP 2 - MULTILINE DIALOG INTERCEPTOR STREAM CAPTURE ENGINE
+                elif user_input.lower() == "/train":
+                    print("\n[MULTILINE MODE] Paste script blocks below. Press ENTER on an empty line to compile training:")
+                    print("--------------------------------------------------------------------------------")
+                    lines = []
+                    while True:
+                        line = sys.stdin.readline()
+                        if line == "\n" or not line:
+                            break
+                        lines.append(line.strip())
+
+                    training_data = " ".join(lines).strip().lower()
                     if not training_data:
-                        print("[SHELL ERROR] Text payload missing. Usage: /train <dialogue_sequence>\n")
+                        print("[SHELL ERROR] Empty payload. Training aborted.\n")
                         continue
 
-                    # FIXED: STEP 2 - INPUT VALIDATION GATE FOR PARAMETER COUNTS
-                    # Split input into word chunks and enforce a safe 4-word operational boundary limit
                     word_count = len(training_data.split())
                     if word_count < 4:
-                        print(f"[SHELL ERROR] Incomplete context trajectory detected ({word_count} words).")
-                        print(f"              Training payload must contain at least 4 full structural words.\n")
+                        print(f"[SHELL ERROR] Trajectory too small ({word_count} words). Need at least 4 words.\n")
                         continue
 
                     if os.path.exists(self.dataset_path):
@@ -110,22 +117,13 @@ class FontanaConsoleApp:
                     print(f"[LIVE TRAINING] Encapsulating persistent text stream...")
                     token_ids = self.tokenizer.encode(training_data)
 
-                    if len(token_ids) < 2:
-                        print("[SHELL ERROR] Training context must contain at least 2 token parameters to align weights.\n")
-                        continue
-
                     with open(self.token_file_path, "w", encoding="utf-8") as token_f:
                         token_f.write(" ".join(map(str, token_ids)))
 
                     print(f"[LIVE OPTIMIZATION] Invoking C++ matrix pipeline execution...")
                     try:
-                        subprocess.run(
-                            [self.trainer_path],
-                            capture_output=True,
-                            text=True,
-                            check=True
-                        )
-                        print("[SHELL STATUS] Matrix weight fields adjusted permanently. Text appended to dataset.txt.\n")
+                        subprocess.run([self.trainer_path], capture_output=True, text=True, check=True)
+                        print("[SHELL STATUS] Matrix weight fields adjusted permanently across multiline text block.\n")
                     except subprocess.CalledProcessError as e:
                         print(f"❌ [LIVE PIPELINE BREAK] C++ trainer rejected sequence. Details: {e}\n")
 

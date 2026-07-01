@@ -150,7 +150,7 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // FIXED: HARMONIC LINEAR RECIPROCAL REPETITION DECAY GATE
+            // Harmonic Linear Reciprocal Repetition Decay Gate
             if (active_tokens.size() > 3) {
                 for (size_t t = 3; t < active_tokens.size(); ++t) {
                     if (active_tokens[t] == i) {
@@ -166,9 +166,11 @@ namespace Fontana {
                 }
             }
 
+            // FIXED: STEP 1 - TIGHTENED CHARACTER SUPPRESSION MASK
+            // Crushed single-character zone penalty from -2.5f to -4.5f to surgically purge tracking static (i, s, t)
             if (i >= 5 && i <= 76) {
                 if (i != 44 && i != 46 && i != 63) {
-                    raw_scores[i] -= 2.5f;
+                    raw_scores[i] -= 4.5f;
                 }
             }
 
@@ -231,7 +233,6 @@ namespace Fontana {
     TensorEngine::~TensorEngine() {}
 }
 
-// FIXED: INJECTED CRITICAL SUBPROCESS MAIN ENTRY TERMINATION POINT
 int main() {
     std::string input_line;
     if (std::getline(std::cin, input_line)) {
