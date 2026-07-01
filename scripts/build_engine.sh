@@ -22,9 +22,13 @@ g++ -std=c++17 backend/train_optimized.cpp -o backend/trainer_optimized_binary
 if [ $? -eq 0 ]; then
     echo "[3/4] [SUCCESS] C++ backend compiled cleanly with zero errors."
     echo "=================================================="
-    echo "🚀 [4/4] [EXECUTION] Launching Fontana Master Brain..."
+    echo "🚀 [4/4] [EXECUTION] Launching Fontana Background Daemon..."
     echo "=================================================="
-    python3 core/fontana_brain.py
+
+    # FIXED: MILESTONE 1 DAEMON ENGINE LAUNCHER
+    # Spawn the C++ process directly into your RAM background tracks using the Linux ampersand operator.
+    # This prevents the terminal prompt line from freezing!
+    ./backend/tensor_engine_binary &
 else
     echo "❌ [ERROR] C++ compilation failed. Inspect compiler logs above."
     exit 1
