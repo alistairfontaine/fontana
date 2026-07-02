@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧭 THE FONTANA ENGINE CORE CONTROL PANEL</title>
+    <style>
+        body { font-family: monospace; background: #0d1117; color: #c9d1d9; padding: 25px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 25px; }
+        h1, h2 { color: #58a6ff; border-bottom: 1px solid #21262d; padding-bottom: 10px; margin-top: 0; }
+        .section { margin-bottom: 25px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #8b949e; }
+        input[type="text"], textarea, input[type="number"] {
+            width: 100%; padding: 12px; background: #0d1117; color: #c9d1d9;
+            border: 1px solid #30363d; border-radius: 6px; box-sizing: border-box; font-family: monospace; margin-bottom: 15px;
+        }
+        button { background: #238636; color: #ffffff; border: 1px solid #2ea44f; border-radius: 6px; padding: 12px 24px; cursor: pointer; font-family: monospace; font-weight: bold; }
+        button:hover { background: #2ea44f; }
+        .output { background: #0d1117; border: 1px solid #30363d; padding: 15px; border-radius: 6px; white-space: pre-wrap; color: #79c0ff; min-height: 40px; margin-top: 10px; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; background: #1f6feb; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧭 THE FONTANA ENGINE CORE</h1>
+        <div class="section">
+            <span class="status-badge">GATEWAY STATUS: LOCALHOST PORT 8000 LIVE</span>
+        </div>
+
+        <!-- GENERATION SUITE BLOCK -->
+        <div class="section">
+            <h2>🚀 Stochastic Text Generation Suite</h2>
+            <label>Prompt Seed Phrase:</label>
+            <input type="text" id="seedInput" value="Alistair">
+
+            <label>Maximum Token Length Bounds:</label>
+            <input type="number" id="lengthInput" value="55" min="5" max="150">
+
+            <button onclick="triggerGeneration()">Run RAM Matrix Pass</button>
+            <div class="output" id="generationOutput">Ready for vector prompt input stream...</div>
+        </div>
+
+        <!-- MULTILINE TRAINING SUITE BLOCK -->
+        <div class="section">
+            <h2>📝 Persistent Multiline Dialogue Harvester</h2>
+            <label>Paste Screenplay Dialogue Blocks:</label>
+            <textarea id="trainInput" rows="5" placeholder="Paste script pages here... (Enforces strict 4-word minimum gate validation)"></textarea>
+
+            <button onclick="triggerTraining()" style="background: #8957e5; border-color: #986ee2;">Commit Text to Disk Tracks</button>
+            <div class="output" id="trainingOutput">Ready to ingest multi-source context tokens...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000";
+
+        async function triggerGeneration() {
+            const outDiv = document.getElementById("generationOutput");
+            outDiv.innerText = "Evaluating spatial vector weights inside RAM...";
+
+            try {
+                const response = await fetch(`${API_BASE}/v1/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        seed: document.getElementById("seedInput").value,
+                        max_tokens: parseInt(document.getElementById("lengthInput").value)
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    outDiv.innerText = data.completed_text;
+                } else {
+                    outDiv.innerText = `❌ Error: ${data.detail}`;
+                }
+            } catch (err) {
+                outDiv.innerText = `❌ Pipeline Connection Failure: ${err.message}`;
+            }
+        }
+
+        async function triggerTraining() {
+            const outDiv = document.getElementById("trainingOutput");
+            outDiv.innerText = "Processing text compression stream filters...";
+
+            try {
+                const response = await fetch(`${API_BASE}/v1/train`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: document.getElementById("trainInput").value })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    outDiv.innerText = `🌟 Success: ${data.message}\nWords compiled: ${data.words_processed}`;
+                    document.getElementById("trainInput").value = "";
+                } else {
+                    outDiv.innerText = `❌ Error: ${data.detail}`;
+                }
+            } catch (err) {
+                outDiv.innerText = `❌ Pipeline Connection Failure: ${err.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
