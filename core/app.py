@@ -6,14 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fontana_brain import FontanaBrain
 from tokenizer import FontanaTokenizer
 
-# Initialize the Asynchronous Network Gateway Server Utility
 app = FastAPI(
     title="The Fontana Engine Core REST API",
     version="2.0",
     description="Asynchronous Background Network Daemon Gateway Layer"
 )
 
-# Enable Cross-Origin Resource Sharing (CORS) so your local browser can connect cleanly
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,16 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Bind our network hooks to the active RAM background service daemon
 brain = FontanaBrain()
 tokenizer = FontanaTokenizer()
 
-# Locate project paths for database tracking stability
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 dataset_path = os.path.join(project_root, "dataset.txt")
 
-# Define secure Pydantic request models
 class GenerationRequest(BaseModel):
     seed: str
     max_tokens: int = 55
@@ -41,7 +36,6 @@ class TrainingRequest(BaseModel):
 
 @app.get("/")
 async def root_status():
-    """Returns the operational status baseline metrics of the gateway."""
     return {
         "status": "ONLINE",
         "engine": "The Fontana Engine Core",
@@ -51,7 +45,6 @@ async def root_status():
 
 @app.post("/v1/generate")
 async def network_generate(req: GenerationRequest):
-    """Asynchronously streams token sequences down to the background C++ RAM matrices."""
     seed_phrase = req.seed.strip()
     if not seed_phrase:
         raise HTTPException(status_code=400, detail="Seed phrase cannot be empty.")
@@ -60,12 +53,10 @@ async def network_generate(req: GenerationRequest):
     suffixes = ["ing", "tion", "ent", "yst", "sta", "ook", "ine", "tio", "ste"]
     generated_phrases = []
 
-    # Non-blocking prediction evaluation loop
     for _ in range(req.max_tokens):
         token_ids = tokenizer.encode(current_text)
         token_string = " ".join(map(str, token_ids))
 
-        # Direct, sub-millisecond RAM stream communication hook
         stdout_output = brain.submit_prompt(token_string)
 
         if "[ERROR]" in stdout_output:
@@ -74,7 +65,7 @@ async def network_generate(req: GenerationRequest):
         try:
             predicted_id = int(stdout_output.strip())
 
-            # Stop-Token filter conditions
+            # FIXED: STABLE ARRAY TERMINATION CHECK CONDITIONS
             if predicted_id == 0 or predicted_id == 1 or predicted_id == 2:
                 break
 
@@ -84,7 +75,6 @@ async def network_generate(req: GenerationRequest):
 
             predicted_char = tokenizer.inverse_vocab.get(predicted_id, "")
 
-            # Post-processor whitespace injection layout formatting rule
             if predicted_char.strip() and not any(predicted_char.startswith(s) for s in suffixes):
                 if not current_text.endswith(" "):
                     current_text += " "
@@ -103,12 +93,10 @@ async def network_generate(req: GenerationRequest):
 
 @app.post("/v1/train")
 async def network_train(req: TrainingRequest):
-    """Enforces parameter guards and appends multi-line text payloads to dataset.txt permanently."""
     raw_training_data = req.text.strip().lower()
     if not raw_training_data:
         raise HTTPException(status_code=400, detail="Training text payload cannot be empty.")
 
-    # INPUT VALIDATION GATE FOR NETWORK API PAYLOADS
     word_count = len(raw_training_data.split())
     if word_count < 4:
         raise HTTPException(
@@ -116,12 +104,10 @@ async def network_train(req: TrainingRequest):
             detail=f"Incomplete context trajectory detected ({word_count} words). Minimum payload required is 4 structural words."
         )
 
-    # Permanently append custom interactive text dialog straight into root dataset.txt
     if os.path.exists(dataset_path):
         with open(dataset_path, "a", encoding="utf-8") as dataset_f:
             dataset_f.write("\n" + raw_training_data)
 
-    # Invoke live runtime training matrix connections re-scaling via system hook
     from train_link import FontanaTrainerLink
     trainer_link = FontanaTrainerLink()
     trainer_link.train_on_text(raw_training_data)

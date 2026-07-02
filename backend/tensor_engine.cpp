@@ -170,7 +170,6 @@ namespace Fontana {
                 }
             }
 
-            // Tightened character suppression mask
             if (i >= 5 && i <= 76) {
                 if (i != 44 && i != 46 && i != 63) {
                     raw_scores[i] -= 4.5f;
@@ -204,9 +203,6 @@ namespace Fontana {
             token_probabilities[indices[i]] = 0.0f;
         }
 
-        // FIXED: CREATIVE ROADMAP STEP 1 - NATIVE C++ ADAPTIVE TOP-P DECAY SCHEDULER
-        // Dynamically widen our nucleus selection pool ceiling as the sentence sequence stretches
-        // to completely eliminate word starvation and maximize vocabulary creative variety.
         float base_top_p = 0.90f;
         float context_expansion_factor = 0.001f * static_cast<float>(active_tokens.size());
         float target_top_p = std::min(0.95f, base_top_p + context_expansion_factor);
@@ -259,7 +255,8 @@ int main() {
         int rx_fd = open(rx_pipe.c_str(), O_RDONLY);
         if (rx_fd < 0) continue;
 
-        char buffer[1024]; // Explicit safe message track buffer
+        // FIXED: PRECISE 4096-BYTE ARRAY MEMORY STACK BLOCK ALLOCATION
+        char buffer[4096];
         ssize_t bytes_read = read(rx_fd, buffer, sizeof(buffer) - 1);
         close(rx_fd);
 
