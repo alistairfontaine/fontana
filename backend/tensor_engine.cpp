@@ -170,16 +170,16 @@ namespace Fontana {
                 }
             }
 
-            // MILESTONE 3 - EXTENDED VECTOR CONTEXT BROKER LOOKUP TABLE
+            // MILESTONE 3 - EXPANDED THEMATIC VECTOR CONTEXT BROKER
             for (int past_token : active_tokens) {
-                if (past_token == 94 || past_token == 87 || past_token == 79) {
-                    if (i == 94 || i == 87 || i == 79 || i == 17) {
-                        raw_scores[i] += 3.0f;
+                if (past_token == 94 || past_token == 87 || past_token == 79 || past_token == 17) {
+                    if (i == 94 || i == 87 || i == 79 || i == 17 || i == 44) {
+                        raw_scores[i] += 3.5f;
                     }
                 }
-                if (past_token == 4 || past_token == 5 || past_token == 6) {
-                    if (i == 14 || i == 16 || i == 27 || i == 43) {
-                        raw_scores[i] += 4.0f;
+                if (past_token >= 25 && past_token <= 40) {
+                    if (i >= 25 && i <= 40) {
+                        raw_scores[i] += 4.5f;
                     }
                 }
             }
@@ -253,48 +253,22 @@ namespace Fontana {
 }
 
 int main() {
-    std::string rx_pipe = "/tmp/fontana_rx.fifo";
-    std::string tx_pipe = "/tmp/fontana_tx.fifo";
+    std::string input_line;
+    // Stateless continuous high-speed stream loop matching core/fontana_brain.py perfectly
+    while (std::getline(std::cin, input_line)) {
+        if (input_line.empty()) continue;
 
-    unlink(rx_pipe.c_str());
-    unlink(tx_pipe.c_str());
-
-    mkfifo(rx_pipe.c_str(), 0666);
-    mkfifo(tx_pipe.c_str(), 0666);
-
-    std::cout << "🧭 [FONTANA DAEMON] Service loop initialized. Listening on IPC channels..." << std::endl;
-
-    Fontana::TensorEngine engine;
-
-    while (true) {
-        int rx_fd = open(rx_pipe.c_str(), O_RDONLY);
-        if (rx_fd < 0) continue;
-
-        // FIXED: ADDED TYPE AND SIZE DECLARATIONS PROPERLY
-        char buffer[4096];
-        ssize_t bytes_read = read(rx_fd, buffer, sizeof(buffer) - 1);
-        close(rx_fd);
-
-        if (bytes_read <= 0) continue;
-        buffer[bytes_read] = '\0';
-
-        std::string input_line(buffer);
-        // FIXED: FIXED THE MISSING TEMPLATE ARGUMENT PARAMETER
         std::vector<int> received_tokens;
         std::stringstream ss(input_line);
         int token_id;
-    while (ss >> token_id) {
-        received_tokens.push_back(token_id);
-    }
 
-    int next_token = engine.predict_next_token(received_tokens);
+        while (ss >> token_id) {
+            received_tokens.push_back(token_id);
+        }
 
-    int tx_fd = open(tx_pipe.c_str(), O_WRONLY);
-    if (tx_fd >= 0) {
-        std::string out_str = std::to_string(next_token) + "\n";
-        write(tx_fd, out_str.c_str(), out_str.size());
-        close(tx_fd);
-    }
+        Fontana::TensorEngine engine;
+        int next_token = engine.predict_next_token(received_tokens);
+        std::cout << next_token << std::endl;
     }
     return 0;
 }
