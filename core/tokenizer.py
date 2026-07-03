@@ -15,8 +15,7 @@ class FontanaTokenizer:
         for i, char in enumerate(base_chars):
             self.vocab[char] = i + 4
 
-        # Step 2: NEW - Inject structural multi-character subwords and syllables directly into the index pool
-        # This allows our model engine to predict entire blocks of text chunks at zero storage cost!
+        # Step 2: Inject structural multi-character subwords and syllables directly into the index pool
         subwords = [
             'the',
             'and',
@@ -64,7 +63,6 @@ class FontanaTokenizer:
 
         # Build an internal compilation regex sorting longest subwords first to prevent character splitting
         sorted_patterns = sorted(list(self.vocab.keys()), key=len, reverse=True)
-        # Escape punctuation safely to prevent runtime system crash patterns
         escaped_patterns = [re.escape(p) for p in sorted_patterns if p not in ["[PAD]", "[UNK]", "[BOS]", "[EOS]"]]
         self.tokenizer_regex = re.compile("|".join(escaped_patterns))
 
@@ -72,14 +70,12 @@ class FontanaTokenizer:
         """Parses human sentences into optimized structural subword integer strings."""
         tokens = [self.vocab["[BOS]"]]
 
-        # Scan text streams and isolate matching subwords or fallback base characters
         matches = self.tokenizer_regex.findall(text)
 
         for segment in matches:
             if segment in self.vocab:
                 tokens.append(self.vocab[segment])
             else:
-                # Handle stray unmapped characters securely
                 for char in segment:
                     tokens.append(self.vocab.get(char, self.vocab["[UNK]"]))
 
@@ -97,7 +93,6 @@ class FontanaTokenizer:
 
 if __name__ == "__main__":
     tokenizer = FontanaTokenizer()
-    # Test text containing raw structural subwords
     test_phrase = "the fontana system code is loading logic"
 
     encoded = tokenizer.encode(test_phrase)

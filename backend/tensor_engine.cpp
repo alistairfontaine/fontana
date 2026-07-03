@@ -9,10 +9,6 @@
 #include <algorithm>
 #include <random>
 #include <fstream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 namespace Fontana {
 
@@ -92,24 +88,7 @@ namespace Fontana {
         if (tokens.empty()) return 3;
 
         const std::vector<int>& active_tokens = tokens;
-
         int vocab_size = 107;
-        std::string meta_path = "/media/mr-fontaine/R/RECOVERY/Coding/fontana/core/vocab_meta.json";
-        std::ifstream meta_file(meta_path);
-
-        if (meta_file.is_open()) {
-            std::string line;
-            if (std::getline(meta_file, line)) {
-                size_t pos = line.find("vocab_size\":");
-                if (pos != std::string::npos) {
-                    std::string size_str = line.substr(pos + 12);
-                    size_str = size_str.substr(0, size_str.find("}"));
-                    vocab_size = std::stoi(size_str);
-                }
-            }
-            meta_file.close();
-        }
-
         int embed_dim = 512;
         int context_window_size = 12;
 
@@ -120,15 +99,8 @@ namespace Fontana {
         WeightMatrix neural_gate(vocab_size, embed_dim);
         ActivationLayer activation;
 
-        if (!embed.load_from_disk(embed_file)) {
-            embed.initialize_random_embeddings();
-            embed.save_to_disk(embed_file);
-        }
-
-        if (!neural_gate.load_from_disk(weights_file)) {
-            neural_gate.initialize_weights();
-            neural_gate.save_to_disk(weights_file);
-        }
+        embed.load_from_disk(embed_file);
+        neural_gate.load_from_disk(weights_file);
 
         std::vector<float> context_vector(embed_dim, 0.0f);
         int tokens_to_scan = std::min(context_window_size, (int)active_tokens.size());
@@ -154,7 +126,7 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // Harmonic Linear Reciprocal Repetition Decay Gate
+            // Stable Linear Decay
             if (active_tokens.size() > 3) {
                 for (size_t t = 3; t < active_tokens.size(); ++t) {
                     if (active_tokens[t] == i) {
@@ -162,65 +134,13 @@ namespace Fontana {
                         raw_scores[i] -= (2.5f / (1.0f + 0.15f * distance));
                     }
                 }
-            } else {
-                for (int t : active_tokens) {
-                    if (t == i) {
-                        raw_scores[i] -= 0.5f;
-                    }
-                }
-            }
-
-            // Milestone 3 Extended Vector Context Broker
-            for (int past_token : active_tokens) {
-                if (past_token == 94 || past_token == 87 || past_token == 79 || past_token == 17) {
-                    if (i == 94 || i == 87 || i == 79 || i == 17 || i == 44) {
-                        raw_scores[i] += 3.5f;
-                    }
-                }
-                if (past_token == 95 || past_token == 31 || past_token == 16) {
-                    if (i == 95 || i == 31 || i == 16 || i == 98 || i == 67) {
-                        raw_scores[i] += 4.0f;
-                    }
-                }
-                if (past_token >= 25 && past_token <= 40) {
-                    if (i >= 25 && i <= 40) {
-                        raw_scores[i] += 4.5f;
-                    }
-                }
-            }
-
-            // Single-character tracking static mask
-            if (i >= 5 && i <= 76) {
-                if (i != 44 && i != 46 && i != 63) {
-                    raw_scores[i] -= 8.5f;
-                }
-            }
-
-            // FIXED: PRODUCTION CORE VOCABULARY BIAS SHIELD
-            // Isolate structural stop tokens from receiving the high-value phrase boost.
-            // Heavily penalise early [EOS] (index 4) selections unless generation bounds are met.
-            if (i >= 77 && i < vocab_size) {
-                if (i != 4) { // Do not boost End-Of-Sequence control token
-                    raw_scores[i] += 8.0f;
-                }
-            }
-
-            if (i == 0 || i == 1 || i == 2 || i==3 || i == 4) {
-                raw_scores[i] -= 15.0f; // Lock out structural control and premature [EOS] parameters
             }
         }
 
-        float dynamic_temperature = 0.22f;
-        if (active_tokens.size() <= 4) {
-            dynamic_temperature = 0.075f;
-        } else {
-            float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
-            dynamic_temperature = std::max(0.18f, 0.25f - sequence_decay_factor);
-        }
-
+        float dynamic_temperature = 0.12f;
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
-        int K = 6;
+        int K = 2;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
@@ -232,21 +152,6 @@ namespace Fontana {
             token_probabilities[indices[i]] = 0.0f;
         }
 
-        float base_top_p = 0.90f;
-        float context_expansion_factor = 0.001f * static_cast<float>(active_tokens.size());
-        float target_top_p = std::min(0.95f, base_top_p + context_expansion_factor);
-
-        float cumulative_p = 0.0f;
-        for (int i = 0; i < K; ++i) {
-            cumulative_p += token_probabilities[indices[i]];
-            if (cumulative_p > target_top_p) {
-                for (int j = i + 1; j < K; ++j) {
-                    token_probabilities[indices[j]] = 0.0f;
-                }
-                break;
-            }
-        }
-
         float prob_sum = 0.0f;
         for (int i = 0; i < K; ++i) prob_sum += token_probabilities[indices[i]];
         for (int i = 0; i < K; ++i) token_probabilities[indices[i]] /= prob_sum;
@@ -256,12 +161,10 @@ namespace Fontana {
         std::discrete_distribution<int> dice_roller(token_probabilities.begin(), token_probabilities.end());
 
         int predicted_token_id = dice_roller(gen);
-
         return predicted_token_id;
     }
 
     void TensorEngine::process_tokens(const std::vector<int>& tokens) {}
-
     TensorEngine::TensorEngine() {}
     TensorEngine::~TensorEngine() {}
 }
@@ -270,19 +173,15 @@ int main() {
     std::string input_line;
     while (std::getline(std::cin, input_line)) {
         if (input_line.empty()) continue;
-
         std::vector<int> received_tokens;
         std::stringstream ss(input_line);
-
         int token_id;
-        while (ss >> token_id) { received_tokens.push_back(token_id);
+        while (ss >> token_id) {
+            received_tokens.push_back(token_id);
         }
-
-        // ENDSTATEMENT - SIGNAL
-    Fontana::TensorEngine engine;
-    int next_token = engine.predict_next_token(received_tokens);
+        Fontana::TensorEngine engine;
+        int next_token = engine.predict_next_token(received_tokens);
         std::cout << next_token << std::endl;
     }
     return 0;
 }
-

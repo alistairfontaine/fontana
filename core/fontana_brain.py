@@ -29,11 +29,9 @@ class FontanaBrain:
         token_string = prompt_text.strip() + "\n"
 
         try:
-            # Stream the token string directly into the active C++ RAM memory process
             self.process.stdin.write(token_string)
             self.process.stdin.flush()
 
-            # Instantly read the predicted response token ID back from stdout
             predicted_id_str = self.process.stdout.readline().strip()
 
             if not predicted_id_str:
