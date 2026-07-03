@@ -170,23 +170,18 @@ namespace Fontana {
                 }
             }
 
-            // FIXED: MILESTONE 3 STEPS 1 & 2 - EXPANDED THEMATIC VECTOR CONTEXT BROKER
-            // Dynamically evaluates lookback coordinates to cross-reference screenplay themes,
-            // expanded screenplay 4 character anchors, and gothic horror database elements.
+            // Milestone 3 Extended Vector Context Broker
             for (int past_token : active_tokens) {
-                // Screenplay Structure Mapping (code, system, logic, brain)
                 if (past_token == 94 || past_token == 87 || past_token == 79 || past_token == 17) {
                     if (i == 94 || i == 87 || i == 79 || i == 17 || i == 44) {
                         raw_scores[i] += 3.5f;
                     }
                 }
-                // Extended Cinematic Feature Screenplay 4 Dialogue Anchors
                 if (past_token == 95 || past_token == 31 || past_token == 16) {
                     if (i == 95 || i == 31 || i == 16 || i == 98 || i == 67) {
                         raw_scores[i] += 4.0f;
                     }
                 }
-                // Extended Gothic Literature Mapping (Frankenstein, Dracula anchors)
                 if (past_token >= 25 && past_token <= 40) {
                     if (i >= 25 && i <= 40) {
                         raw_scores[i] += 4.5f;
@@ -194,29 +189,38 @@ namespace Fontana {
                 }
             }
 
-            // Tightened character suppression mask
+            // Single-character tracking static mask
             if (i >= 5 && i <= 76) {
                 if (i != 44 && i != 46 && i != 63) {
-                    raw_scores[i] -= 4.5f;
+                    raw_scores[i] -= 8.5f;
                 }
             }
 
-            if (i == 0 || i == 1 || i == 2) {
-                raw_scores[i] -= 10.0f;
+            // FIXED: PRODUCTION CORE VOCABULARY BIAS SHIELD
+            // Isolate structural stop tokens from receiving the high-value phrase boost.
+            // Heavily penalise early [EOS] (index 4) selections unless generation bounds are met.
+            if (i >= 77 && i < vocab_size) {
+                if (i != 4) { // Do not boost End-Of-Sequence control token
+                    raw_scores[i] += 8.0f;
+                }
+            }
+
+            if (i == 0 || i == 1 || i == 2 || i==3 || i == 4) {
+                raw_scores[i] -= 15.0f; // Lock out structural control and premature [EOS] parameters
             }
         }
 
-        float dynamic_temperature = 0.12f;
+        float dynamic_temperature = 0.22f;
         if (active_tokens.size() <= 4) {
             dynamic_temperature = 0.075f;
         } else {
             float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
-            dynamic_temperature = std::max(0.095f, 0.12f - sequence_decay_factor);
+            dynamic_temperature = std::max(0.18f, 0.25f - sequence_decay_factor);
         }
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
-        int K = 2;
+        int K = 6;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
@@ -269,14 +273,14 @@ int main() {
 
         std::vector<int> received_tokens;
         std::stringstream ss(input_line);
+
         int token_id;
-
-        while (ss >> token_id) {
-
-        received_tokens.push_back(token_id);
+        while (ss >> token_id) { received_tokens.push_back(token_id);
         }
-        Fontana::TensorEngine engine;
-        int next_token = engine.predict_next_token(received_tokens);
+
+        // ENDSTATEMENT - SIGNAL
+    Fontana::TensorEngine engine;
+    int next_token = engine.predict_next_token(received_tokens);
         std::cout << next_token << std::endl;
     }
     return 0;
