@@ -1,15 +1,15 @@
 import os
 import subprocess
+from tokenizer import FontanaTokenizer
 
 class FontanaTrainerLink:
     def __init__(self):
-        # Import your original 108-line regular expression tokenizer natively
-        from tokenizer import FontanaTokenizer
         self.tokenizer = FontanaTokenizer()
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.project_root = os.path.dirname(script_dir)
-        # Target your optimized C++ training binary cleanly on your partition
+        # Target your optimized C++ training binary cleanly on your partition paths
         self.trainer_path = os.path.join(self.project_root, "backend", "trainer_optimized_binary")
+        self.token_file_path = os.path.join(script_dir, "training_tokens.txt")
 
     def train_on_text(self, training_text: str):
         print(f"[FONTANA O³] Ingesting training text: '{training_text}'")
@@ -17,39 +17,45 @@ class FontanaTrainerLink:
         if not os.path.exists(self.trainer_path):
             return "[ERROR] C++ trainer matrix binary executable file missing!"
 
+        # 1. Transform raw text into optimized subword ID arrays via your 108-line regex tokenizer
+        token_ids = self.tokenizer.encode(training_text)
+        token_string = " ".join(map(str, token_ids))
+
+        print(f"[DEBUG] Feeding token sequences to C++ trainer: {token_ids}")
+
         try:
-            # Transform human screenplay words cleanly into integer index lists
-            token_ids = self.tokenizer.encode(training_text)
-            token_string = " ".join(map(str, token_ids)) + "\n"
+            # 2. FIXED: Write the scratchpad file to disk to satisfy the hardcoded C++ ifstream bounds
+            with open(self.token_file_path, "w", encoding="utf-8") as token_f:
+                token_f.write(token_string)
 
-            print(f"[DEBUG] Feeding token sequences to C++ trainer: {token_ids}")
-
-            # FIXED: UNBLOCKED NON-BLOCKING SUBPROCESS INTERCEPT CONNECTOR
-            # Spawns the C++ binary and uses .communicate() to pass data and
-            # forcefully transmit an absolute EOF signal instantly, completely preventing deadlocks!
-            process = subprocess.Popen(
+            # 3. Invoke the C++ trainer binary as an isolated execution pass (no parameters passed in argv)
+            result = subprocess.run(
                 [self.trainer_path],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+                capture_output=True,
+                text=True,
+                check=True
             )
 
-            # Flush data bytes and terminate pipes natively in less than 5 milliseconds
-            stdout_output, stderr_output = process.communicate(input=token_string, timeout=5.0)
+            if result.stdout:
+                print(f"[C++ TRAINER OUTPUT]: {result.stdout.strip()}")
+            if result.stderr:
+                print(f"[C++ TRAINER WARNING]: {result.stderr.strip()}")
 
-            if stdout_output:
-                print(f"[C++ TRAINER OUTPUT]: {stdout_output.strip()}")
-            if stderr_output:
-                print(f"[C++ TRAINER WARNING]: {stderr_output.strip()}")
+            # 4. Clean up the scratchpad file instantly to keep your folder paths unpolluted
+            if os.path.exists(self.token_file_path):
+                os.remove(self.token_file_path)
 
-            return f"[SUCCESS] Matrix fields adjusted. C++ Output: {stdout_output.strip()}"
+            return f"[SUCCESS] Matrix weight fields adjusted permanently."
 
-        except subprocess.TimeoutExpired:
-            process.kill()
-            return "[ERROR] C++ training execution matrix pass timed out!"
+        except subprocess.CalledProcessError as e:
+            if os.path.exists(self.token_file_path):
+                os.remove(self.token_file_path)
+            print(f"[PIPELINE ERROR]: C++ trainer process execution failed. Details: {e}")
+            return f"[ERROR] C++ Trainer failure: {str(e)}"
         except Exception as e:
-            return f"[ERROR] Live Pipeline Break: {str(e)}"
+            if os.path.exists(self.token_file_path):
+                os.remove(self.token_file_path)
+            return f"[ERROR] Pipeline Break: {str(e)}"
 
 if __name__ == "__main__":
     link = FontanaTrainerLink()

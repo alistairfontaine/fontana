@@ -3,65 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧭 THE FONTANA ENGINE CORE DASHBOARD</title>
+    <title>🧛 THE FONTANA ENGINE CORE // OPIUM VAULT</title>
     <style>
-        body { font-family: 'Courier New', monospace; background: #090d16; color: #c9d1d9; padding: 30px; margin: 0; }
-        .container { max-width: 900px; margin: 0 auto; background: #0d1117; border: 2px solid #30363d; border-radius: 8px; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
-        h1 { color: #58a6ff; border-bottom: 2px solid #21262d; padding-bottom: 12px; margin-top: 0; font-size: 24px; letter-spacing: 1px; }
-        h2 { color: #ff7b72; font-size: 18px; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 20px; }
-        .card { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 20px; }
-        .status-strip { display: flex; align-items: center; justify-content: space-between; background: #21262d; padding: 10px 15px; border-radius: 6px; margin-bottom: 25px; border-left: 4px solid #238636; }
-        .status-badge { font-weight: bold; font-size: 12px; color: #56d364; text-transform: uppercase; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #8b949e; font-size: 13px; }
-        input[type="text"], textarea, input[type="number"] {
-            width: 100%; padding: 12px; background: #090d16; color: #79c0ff;
-            border: 1px solid #30363d; border-radius: 6px; box-sizing: border-box; font-family: 'Courier New', monospace; margin-bottom: 15px; font-size: 14px;
+        @import url('https://googleapis.com');
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #030303;
+            color: #d1d1d1;
+            padding: 40px 20px;
+            margin: 0;
+            background-image: radial-gradient(circle at 50% 50%, #1a0008 0%, #030303 80%);
         }
-        input[type="text"]:focus, textarea:focus { border-color: #58a6ff; outline: none; }
-        .btn-group { display: flex; justify-content: flex-end; }
-        button { background: #238636; color: #ffffff; border: 1px solid #30363d; border-radius: 6px; padding: 12px 24px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 14px; text-transform: uppercase; transition: 0.2s; }
-        button:hover { background: #2ea44f; box-shadow: 0 0 12px rgba(46,164,79,0.4); }
-        .btn-train { background: #8957e5; border-color: #30363d; }
-        .btn-train:hover { background: #a371f7; box-shadow: 0 0 12px rgba(137,87,229,0.4); }
-        .output-box { background: #090d16; border: 1px solid #21262d; padding: 15px; border-radius: 6px; white-space: pre-wrap; color: #79c0ff; min-height: 50px; margin-top: 15px; font-size: 14px; line-height: 1.5; border-left: 3px solid #58a6ff; }
+        .vault-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: #08080c;
+            border: 2px solid #1c1c24;
+            border-radius: 0px;
+            padding: 40px;
+            box-shadow: 0 0 50px rgba(255, 0, 85, 0.15);
+            position: relative;
+        }
+        .vault-container::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #ff0055, #3a0007, #ff0055);
+        }
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: #ffffff;
+            border-bottom: 1px dashed #3a0007;
+            padding-bottom: 20px;
+            margin-top: 0;
+            font-size: 28px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+        }
+        h2 {
+            font-family: 'Cinzel', serif;
+            color: #ff0055;
+            font-size: 16px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
+        }
+        .matrix-grid { display: grid; grid-template-columns: 1fr; gap: 40px; margin-top: 30px; }
+        .vamp-card {
+            background: #050507;
+            border: 1px solid #14141a;
+            border-radius: 0px;
+            padding: 25px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        .vamp-card:hover {
+            border-color: #ff0055;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.1);
+        }
+        .status-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #000000;
+            padding: 12px 20px;
+            margin-bottom: 35px;
+            border: 1px solid #1a1a24;
+            border-left: 4px solid #ff0055;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .status-badge { font-weight: bold; color: #ff0055; text-shadow: 0 0 5px #ff0055; }
+        label { display: block; font-weight: bold; margin-bottom: 10px; color: #888899; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        input[type="text"], textarea, input[type="number"] {
+            width: 100%; padding: 14px; background: #020203; color: #ffffff;
+            border: 1px solid #1c1c24; border-radius: 0px; box-sizing: border-box;
+            font-family: 'Space Mono', monospace; margin-bottom: 20px; font-size: 13px;
+            transition: 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus { border-color: #ff0055; outline: none; background: #050508; color: #ff0055; }
+        .btn-wrapper { display: flex; justify-content: flex-end; }
+        button {
+            background: #000000; color: #ffffff; border: 1px solid #ff0055;
+            border-radius: 0px; padding: 14px 28px; cursor: pointer;
+            font-family: 'Space Mono', monospace; font-weight: bold; font-size: 12px;
+            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+        }
+        button:hover { background: #ff0055; color: #000000; box-shadow: 0 0 20px rgba(255, 0, 85, 0.6); }
+        .btn-harvester { border-color: #ffffff; color: #ffffff; }
+        .btn-harvester:hover { background: #ffffff; color: #000000; box-shadow: 0 0 20px rgba(255, 255, 255, 0.6); }
+        .opium-output {
+            background: #010102; border: 1px solid #111116; padding: 20px;
+            border-radius: 0px; white-space: pre-wrap; color: #ffffff;
+            min-height: 50px; margin-top: 20px; font-size: 13px; line-height: 1.6;
+            border-left: 2px solid #ff0055; box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🧭 THE FONTANA ENGINE CORE CONTROL MANUAL</h1>
+    <div class="vault-container">
+        <h1>FONTANA // OPIUM_VAULT.SH</h1>
 
         <div class="status-strip">
-            <span style="color: #8b949e; font-size: 13px;">IPC PIPELINE: ACTIVE IN RAM</span>
-            <span class="status-badge">● REST GATEWAY: ONLINE</span>
+            <span style="color: #666677;">MEM_DAEMON: OPERATIONAL_RAM</span>
+            <span class="status-badge">V1_REST: ONLINE // BPE_ACTIVE</span>
         </div>
 
-        <div class="grid-layout">
-            <!-- GENERATION SUITE CARD -->
-            <div class="card">
-                <h2>🚀 Stochastic Synthesis Engine</h2>
+        <div class="matrix-grid">
+            <!-- SYNTHESIS BOX -->
+            <div class="vamp-card">
+                <h2> // STOCHASTIC SYNTHESIS</h2>
                 <label>Prompt Seed Phrase:</label>
                 <input type="text" id="seedInput" value="Fontana">
 
-                <label>Dynamic Output Generation Bounds (Tokens):</label>
+                <label>Sequence Token Length Bounds:</label>
                 <input type="number" id="lengthInput" value="75" min="5" max="150">
 
-                <div class="btn-group">
-                    <button onclick="triggerGeneration()">Run RAM Matrix Pass</button>
+                <div class="btn-wrapper">
+                    <button onclick="triggerGeneration()">Execute RAM Pass</button>
                 </div>
-                <div class="output-box" id="generationOutput">System ready for vector prompt streams...</div>
+                <div class="opium-output" id="generationOutput">Awaiting vector matrix trajectory injection...</div>
             </div>
 
-            <!-- MULTILINE DIALOGUE HARVESTER CARD -->
-            <div class="card">
-                <h2>📝 Persistent Dialogue Harvester</h2>
-                <label>Paste Script Blocks or Literature Sequences:</label>
-                <textarea id="trainInput" rows="6" placeholder="Paste text tracks here... (Enforces strict 4-word parameter verification)"></textarea>
+            <!-- HARVESTER BOX -->
+            <div class="vamp-card">
+                <h2> // DIALOGUE HARVESTER</h2>
+                <label>Ingest Multi-Source Text Coordinates:</label>
+                <textarea id="trainInput" rows="5" placeholder="P A S T E  S C R I P T  B L O C K S  H E R E . . ."></textarea>
 
-                <div class="btn-group">
-                    <button onclick="triggerTraining()" class="btn-train">Commit Text to Disk Tracks</button>
+                <div class="btn-wrapper">
+                    <button onclick="triggerTraining()" class="btn-harvester">Commit to Disk Tracks</button>
                 </div>
-                <div class="output-box" id="trainingOutput">System ready to ingest multi-source context tokens...</div>
+                <div class="opium-output" id="trainingOutput">Awaiting text trajectory data stream blocks...</div>
             </div>
         </div>
     </div>
@@ -71,7 +147,7 @@
 
         async function triggerGeneration() {
             const outBox = document.getElementById("generationOutput");
-            outBox.innerHTML = "<span style='color: #8b949e;'>Evaluating 512-HD tensor vectors inside RAM...</span>";
+            outBox.innerHTML = "<span style='color: #444455;'>Streaming 512-HD tensor spaces...</span>";
 
             try {
                 const response = await fetch(`${API_BASE}/v1/generate`, {
@@ -86,16 +162,16 @@
                 if (response.ok) {
                     outBox.innerText = data.completed_text;
                 } else {
-                    outBox.innerText = `❌ Gateway Exception: ${data.detail}`;
+                    outBox.innerText = `❌ CORE ERROR: ${data.detail}`;
                 }
             } catch (err) {
-                outBox.innerText = `❌ Network Bus Failure: ${err.message}`;
+                outBox.innerText = `❌ BUS SECTOR BREAK: ${err.message}`;
             }
         }
 
         async function triggerTraining() {
             const outBox = document.getElementById("trainingOutput");
-            outBox.innerHTML = "<span style='color: #8b949e;'>Invoking live runtime C++ training matrix connections...</span>";
+            outBox.innerHTML = "<span style='color: #444455;'>Compressing text stream into memory cells...</span>";
 
             try {
                 const response = await fetch(`${API_BASE}/v1/train`, {
@@ -105,13 +181,13 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    outBox.innerHTML = `<span style='color: #56d364;'>🌟 SUCCESS: ${data.message}</span>\nWords processed: ${data.words_processed}`;
+                    outBox.innerHTML = `<span style='color: #ff0055;'>🩸 HARVEST COMPLETE: ${data.message}</span>\nWords processing: ${data.words_processed}`;
                     document.getElementById("trainInput").value = "";
                 } else {
-                    outBox.innerText = `❌ Guardrail Exception: ${data.detail}`;
+                    outBox.innerText = `❌ BOUNDARY ERROR: ${data.detail}`;
                 }
             } catch (err) {
-                outBox.innerText = `❌ Network Bus Failure: ${err.message}`;
+                outBox.innerText = `❌ BUS SECTOR BREAK: ${err.message}`;
             }
         }
     </script>
