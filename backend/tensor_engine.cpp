@@ -9,6 +9,10 @@
 #include <algorithm>
 #include <random>
 #include <fstream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace Fontana {
 
@@ -126,7 +130,7 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // Stable Linear Decay
+            // Stable Linear Decay Loop
             if (active_tokens.size() > 3) {
                 for (size_t t = 3; t < active_tokens.size(); ++t) {
                     if (active_tokens[t] == i) {
@@ -137,10 +141,22 @@ namespace Fontana {
             }
         }
 
-        float dynamic_temperature = 0.12f;
+        // FIXED: STEP 2 - CALIBRATED SOFTMAX MATRIX PROBABILITY SCALES
+        // Lifted long-range entropy minimum boundary condition from 0.095f to a healthy 0.18f
+        // to prevent token starvation and give sentence structures natural creative breathing room.
+        float dynamic_temperature = 0.22f;
+        if (active_tokens.size() <= 4) {
+            dynamic_temperature = 0.075f;
+        } else {
+            float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
+            dynamic_temperature = std::max(0.18f, 0.25f - sequence_decay_factor);
+        }
+
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
-        int K = 2;
+        // FIXED: BROADENED TOP-K TRUNCATION FILTER GATE
+        // Scaled selection horizon parameter from K=2 up to an unlocked K=6 choices.
+        int K = 6;
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
@@ -150,6 +166,21 @@ namespace Fontana {
 
         for (int i = K; i < vocab_size; ++i) {
             token_probabilities[indices[i]] = 0.0f;
+        }
+
+        float base_top_p = 0.90f;
+        float context_expansion_factor = 0.001f * static_cast<float>(active_tokens.size());
+        float target_top_p = std::min(0.95f, base_top_p + context_expansion_factor);
+
+        float cumulative_p = 0.0f;
+        for (int i = 0; i < K; ++i) {
+            cumulative_p += token_probabilities[indices[i]];
+            if (cumulative_p > target_top_p) {
+                for (int j = i + 1; j < K; ++j) {
+                    token_probabilities[indices[j]] = 0.0f;
+                }
+                break;
+            }
         }
 
         float prob_sum = 0.0f;
