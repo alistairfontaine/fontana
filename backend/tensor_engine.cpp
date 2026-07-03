@@ -170,13 +170,23 @@ namespace Fontana {
                 }
             }
 
-            // MILESTONE 3 - EXPANDED THEMATIC VECTOR CONTEXT BROKER
+            // FIXED: MILESTONE 3 STEPS 1 & 2 - EXPANDED THEMATIC VECTOR CONTEXT BROKER
+            // Dynamically evaluates lookback coordinates to cross-reference screenplay themes,
+            // expanded screenplay 4 character anchors, and gothic horror database elements.
             for (int past_token : active_tokens) {
+                // Screenplay Structure Mapping (code, system, logic, brain)
                 if (past_token == 94 || past_token == 87 || past_token == 79 || past_token == 17) {
                     if (i == 94 || i == 87 || i == 79 || i == 17 || i == 44) {
                         raw_scores[i] += 3.5f;
                     }
                 }
+                // Extended Cinematic Feature Screenplay 4 Dialogue Anchors
+                if (past_token == 95 || past_token == 31 || past_token == 16) {
+                    if (i == 95 || i == 31 || i == 16 || i == 98 || i == 67) {
+                        raw_scores[i] += 4.0f;
+                    }
+                }
+                // Extended Gothic Literature Mapping (Frankenstein, Dracula anchors)
                 if (past_token >= 25 && past_token <= 40) {
                     if (i >= 25 && i <= 40) {
                         raw_scores[i] += 4.5f;
@@ -254,7 +264,6 @@ namespace Fontana {
 
 int main() {
     std::string input_line;
-    // Stateless continuous high-speed stream loop matching core/fontana_brain.py perfectly
     while (std::getline(std::cin, input_line)) {
         if (input_line.empty()) continue;
 
@@ -263,12 +272,13 @@ int main() {
         int token_id;
 
         while (ss >> token_id) {
-            received_tokens.push_back(token_id);
-        }
 
+        received_tokens.push_back(token_id);
+        }
         Fontana::TensorEngine engine;
         int next_token = engine.predict_next_token(received_tokens);
         std::cout << next_token << std::endl;
     }
     return 0;
 }
+
