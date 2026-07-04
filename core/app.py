@@ -29,7 +29,7 @@ dataset_path = os.path.join(project_root, "dataset.txt")
 
 class GenerationRequest(BaseModel):
     seed: str
-    max_tokens: int = 55
+    max_tokens: int = 75
 
 class TrainingRequest(BaseModel):
     text: str

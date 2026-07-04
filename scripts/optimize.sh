@@ -22,9 +22,12 @@ fi
 BACKUP_DIR="weights_backup"
 mkdir -p "$BACKUP_DIR"
 
-# 2. Clear un-stashed transient matrix caches from root folder safely
-echo "[1/4] [PURGE] Clearing active memory runtime files..."
+# FIXED: STEP 1 - AUTOMATED MULTI-PROFILE DIRECTORY CLEANUP UTILITY
+# Cleanly housekeep the backup directory to prevent file system track bloat
+echo "[1/4] [PURGE] Clearing active memory runtime files and cleaning legacy backups..."
 rm -f fontana_weights.bin fontana_embeddings.bin
+# Delete trailing unaligned remnants or corrupted profiles of the same name to keep disk lean
+rm -f "${BACKUP_DIR}/fontana_weights_${PROFILE_NAME}.bin" "${BACKUP_DIR}/fontana_embeddings_${PROFILE_NAME}.bin"
 
 # 3. Launch python tokenization compression and training matrix layers pass
 echo "[2/4] [TRAINING] Triggering fresh dataset ingestion pipeline..."
@@ -35,14 +38,13 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 4. FIXED: Force-Initialize Aligned High-HD Embeddings File Automatically
+# 4. Force-Initialize Aligned High-HD Embeddings File Automatically
 echo "[3/4] [ALIGNMENT] Forcing 512-dimensional embedding map initialization..."
 if [ ! -f "fontana_embeddings.bin" ]; then
-    # Stream a dummy baseline context string to the execution brain binary to drop a clean file onto disk
     echo "2 3 4" | ./backend/tensor_engine_binary > /dev/null 2>&1
 fi
 
-# 5. FIXED: Automated Stashing. Duplicate both files cleanly to the backup storage partition pools
+# 5. Automated Stashing. Duplicate both files cleanly to the backup storage partition pools
 echo "[4/4] [STASHING] Freezing parameters to weights_backup/..."
 if [ -f "fontana_weights.bin" ] && [ -f "fontana_embeddings.bin" ]; then
     cp fontana_weights.bin "${BACKUP_DIR}/fontana_weights_${PROFILE_NAME}.bin"
