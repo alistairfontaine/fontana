@@ -8,8 +8,8 @@ from tokenizer import FontanaTokenizer
 
 app = FastAPI(
     title="The Fontana Engine Core REST API",
-    version="2.0",
-    description="Asynchronous Background Network Daemon Gateway Layer"
+    version="3.0",
+    description="Stateful Asynchronous Background Network Daemon Gateway Layer"
 )
 
 app.add_middleware(
@@ -27,6 +27,9 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 dataset_path = os.path.join(project_root, "dataset.txt")
 
+# Stateful Session Memory tracking history across sequential prompts
+SESSION_HISTORY_BUFFER = []
+
 class GenerationRequest(BaseModel):
     seed: str
     max_tokens: int = 75
@@ -38,23 +41,28 @@ class TrainingRequest(BaseModel):
 async def root_status():
     return {
         "status": "ONLINE",
-        "engine": "The Fontana Engine Core",
+        "engine": "The Fontana Engine Core // ANTAGONIST",
         "architecture": "512-HD Spatial Tensors",
-        "ipc_channel": "Unix Named Pipes (/tmp/fontana_*.fifo)"
+        "ipc_channel": "File-Synchronized Non-Blocking RAM Subprocess"
     }
 
 @app.post("/v1/generate")
 async def network_generate(req: GenerationRequest):
+    global SESSION_HISTORY_BUFFER
     seed_phrase = req.seed.strip()
     if not seed_phrase:
         raise HTTPException(status_code=400, detail="Seed phrase cannot be empty.")
+
+    # Connect rolling history context strings cleanly
+    history_context = " ".join(SESSION_HISTORY_BUFFER[-3:]) # Track last 3 iterations
+    full_prompt = f"{history_context} {seed_phrase}".strip()
 
     current_text = seed_phrase + " "
     suffixes = ["ing", "tion", "ent", "yst", "sta", "ook", "ine", "tio", "ste"]
     generated_phrases = []
 
     for _ in range(req.max_tokens):
-        token_ids = tokenizer.encode(current_text)
+        token_ids = tokenizer.encode(full_prompt if _ == 0 else current_text)
         token_string = " ".join(map(str, token_ids))
 
         stdout_output = brain.submit_prompt(token_string)
@@ -65,11 +73,11 @@ async def network_generate(req: GenerationRequest):
         try:
             predicted_id = int(stdout_output.strip())
 
-            # FIXED: STABLE ARRAY TERMINATION CHECK CONDITIONS
+            # STABLE ARRAY TERMINATION CHECK CONDITIONS
             if predicted_id == 0 or predicted_id == 1 or predicted_id == 2:
                 break
 
-            if predicted_id == tokenizer.vocab["[EOS]"]:
+            if predicted_id == tokenizer.vocab.get("[EOS]", 3):
                 generated_phrases.append("[EOS]")
                 break
 
@@ -85,10 +93,18 @@ async def network_generate(req: GenerationRequest):
         except ValueError:
             break
 
+    completed_sentence = current_text.strip()
+
+    # Freeze the generated sentence into session history
+    SESSION_HISTORY_BUFFER.append(completed_sentence)
+    if len(SESSION_HISTORY_BUFFER) > 10:
+        SESSION_HISTORY_BUFFER.pop(0)
+
     return {
         "seed_input": seed_phrase,
-        "completed_text": current_text.strip(),
-        "tokens_evaluated": len(generated_phrases)
+        "completed_text": completed_sentence,
+        "tokens_evaluated": len(generated_phrases),
+        "session_memory_depth": len(SESSION_HISTORY_BUFFER)
     }
 
 @app.post("/v1/train")
