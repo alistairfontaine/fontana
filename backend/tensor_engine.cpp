@@ -144,12 +144,12 @@ namespace Fontana {
         // FIXED: STEP 2 - CALIBRATED SOFTMAX MATRIX PROBABILITY SCALES
         // Lifted long-range entropy minimum boundary condition from 0.095f to a healthy 0.18f
         // to prevent token starvation and give sentence structures natural creative breathing room.
-        float dynamic_temperature = 0.22f;
+        float dynamic_temperature = 0.25f;
         if (active_tokens.size() <= 4) {
-            dynamic_temperature = 0.075f;
+            dynamic_temperature = 0.095f;
         } else {
-            float sequence_decay_factor = 0.002f * static_cast<float>(active_tokens.size());
-            dynamic_temperature = std::max(0.18f, 0.25f - sequence_decay_factor);
+            float sequence_decay_factor = 0.001f * static_cast<float>(active_tokens.size());
+            dynamic_temperature = std::max(0.32f, 0.40f - sequence_decay_factor);
         }
 
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
