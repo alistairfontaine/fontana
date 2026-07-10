@@ -88,15 +88,28 @@
         .btn-harvester:hover { background: #000000; color: #00ff66; border-color: #00ff66; }
         .btn-export { background-color: #007bff; border-color: #007bff; color: #ffffff; }
         .btn-export:hover { background: #000000; color: #007bff; border-color: #007bff; }
-        .opium-output {
+                .opium-output {
             background: #000000; border: 1px solid #222222; padding: 20px;
             border-radius: 0px; white-space: pre-wrap; color: #ffffff;
             min-height: 50px; margin-top: 20px; font-size: 14px; line-height: 1.6;
             border-left: 3px solid #ffffff;
         }
+
+        /* NEW OVERRIDES FOR THEME TOGGLE */
+        .btn-toggle { background-color: #444444; border-color: #444444; color: #ffffff; }
+        .btn-toggle:hover { background: #000000; color: #ffffff; border-color: #ffffff; }
+
+        .theme-opium h2 { color: #ff0055; }
+        .theme-opium .vamp-card:hover { border-color: #ff0055; }
+        .theme-opium .status-strip { border-left: 6px solid #ff0055; }
+        .theme-opium .status-badge { color: #ff0055; }
+        .theme-opium input[type="text"]:focus, .theme-opium textarea:focus { border-color: #ff0055; color: #ff0055; outline: none; }
+        .theme-opium .btn-harvester { background-color: #ff0055; border-color: #ff0055; color: #000000; }
+        .theme-opium .btn-harvester:hover { background: #000000; color: #ff0055; border-color: #ff0055; }
     </style>
+
 </head>
-<body>
+<body class="theme-antagonist" id="vaultBody">
     <div class="vault-container">
         <h1>FONTANA // ANTAGONIST.CORE</h1>
 
@@ -116,9 +129,11 @@
                 <input type="number" id="lengthInput" value="75" min="5" max="150">
 
                 <div class="btn-wrapper">
+                    <button onclick="toggleVisualTheme()" class="btn-toggle">Swap Theme</button>
                     <button onclick="exportToMarkdown()" class="btn-export">Export Script</button>
                     <button onclick="triggerGeneration()">Execute Pass</button>
                 </div>
+
                 <div class="opium-output" id="generationOutput">Awaiting vector matrix trajectory injection...</div>
             </div>
 
@@ -208,6 +223,17 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        function toggleVisualTheme() {
+            const bodyNode = document.getElementById("vaultBody");
+            if (bodyNode.classList.contains("theme-antagonist")) {
+                bodyNode.classList.remove("theme-antagonist");
+                bodyNode.classList.add("theme-opium");
+            } else {
+                bodyNode.classList.remove("theme-opium");
+                bodyNode.classList.add("theme-antagonist");
+            }
         }
     </script>
 </body>
