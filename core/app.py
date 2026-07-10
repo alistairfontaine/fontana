@@ -8,8 +8,8 @@ from tokenizer import FontanaTokenizer
 
 app = FastAPI(
     title="The Fontana Engine Core REST API",
-    version="3.0",
-    description="Stateful Asynchronous Background Network Daemon Gateway Layer"
+    version="4.0",
+    description="Stateful Persistent Asynchronous Background Network Daemon Gateway Layer"
 )
 
 app.add_middleware(
@@ -41,9 +41,10 @@ class TrainingRequest(BaseModel):
 async def root_status():
     return {
         "status": "ONLINE",
-        "engine": "The Fontana Engine Core // ANTAGONIST",
+        "engine": "The Fontana Engine Core // ANTAGONIST // STATEFUL",
         "architecture": "512-HD Spatial Tensors",
-        "ipc_channel": "File-Synchronized Non-Blocking RAM Subprocess"
+        "ipc_channel": "File-Synchronized Non-Blocking RAM Subprocess",
+        "memory_depth": len(SESSION_HISTORY_BUFFER)
     }
 
 @app.post("/v1/generate")
@@ -62,6 +63,7 @@ async def network_generate(req: GenerationRequest):
     generated_phrases = []
 
     for _ in range(req.max_tokens):
+        # On Step 1, inject the rolling history context; subsequently, trace the current window
         token_ids = tokenizer.encode(full_prompt if _ == 0 else current_text)
         token_string = " ".join(map(str, token_ids))
 
@@ -97,7 +99,7 @@ async def network_generate(req: GenerationRequest):
 
     # Freeze the generated sentence into session history
     SESSION_HISTORY_BUFFER.append(completed_sentence)
-    if len(SESSION_HISTORY_BUFFER) > 10:
+    if len(SESSION_HISTORY_BUFFER) > 6:
         SESSION_HISTORY_BUFFER.pop(0)
 
     return {
