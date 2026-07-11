@@ -135,9 +135,16 @@
                 </div>
 
                 <div class="opium-output" id="generationOutput">Awaiting vector matrix trajectory injection...</div>
+
+                <!-- NEW STATEFUL ROLLING HISTORY VIEW ZONE -->
+                <label style="margin-top: 20px;">Stateful Session Scene Tracks (Rolling History Log):</label>
+                <div id="historyLogView" style="max-height: 250px; overflow-y: auto; font-size: 13px; line-height: 1.6; color: #888888; border-top: 1px dashed #222222; padding-top: 10px;">
+                    <span style="font-style: italic;">No sequence blocks registered in current RAM session cache.</span>
+                </div>
             </div>
 
             <!-- HARVESTER BOX -->
+
             <div class="vamp-card">
                 <h2>// DIALOGUE HARVESTER</h2>
                 <label>Ingest Multi-Source Text Coordinates:</label>
@@ -172,7 +179,17 @@
                 if (response.ok) {
                     outBox.innerText = data.completed_text;
                     capturedLogHistory.push(data.completed_text);
+
+                    // Update and render the visual stateful history buffer tracker
+                    const logContainer = document.getElementById("historyLogView");
+                    logContainer.innerHTML = ""; // Clear baseline empty string
+                    capturedLogHistory.forEach((sceneText, idx) => {
+                        logContainer.innerHTML += `<div style="margin-bottom: 12px; border-bottom: 1px dashed #111111; padding-bottom: 8px;"><strong style="color: #ffffff;">SEQUENCE ${idx + 1}:</strong> ${sceneText}</div>`;
+                    });
+                    // Auto-scroll the log container down to track the fresh data trajectories
+                    logContainer.scrollTop = logContainer.scrollHeight;
                 } else {
+
                     outBox.innerText = `❌ CORE ERROR: ${data.detail}`;
                 }
             } catch (err) {
