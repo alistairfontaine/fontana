@@ -27,12 +27,16 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 dataset_path = os.path.join(project_root, "dataset.txt")
 
-# Stateful Session Memory tracking history across sequential prompts
-SESSION_HISTORY_BUFFER = []
+# FIXED: PHASE J - MULTI-USER ISOLATED SESSION MEMORY DICTIONARY MAPS
+# Dynamic dictionary maps tracking independent history lookback channels safely in RAM
+SESSION_HISTORY_MAPS = {}
+
 
 class GenerationRequest(BaseModel):
     seed: str
     max_tokens: int = 75
+    session_id: str = "default_vault_channel"
+
 
 class TrainingRequest(BaseModel):
     text: str
@@ -49,13 +53,20 @@ async def root_status():
 
 @app.post("/v1/generate")
 async def network_generate(req: GenerationRequest):
-    global SESSION_HISTORY_BUFFER
+    global SESSION_HISTORY_MAPS
     seed_phrase = req.seed.strip()
     if not seed_phrase:
         raise HTTPException(status_code=400, detail="Seed phrase cannot be empty.")
 
-    # Connect rolling history context strings cleanly
-    history_context = " ".join(SESSION_HISTORY_BUFFER[-3:]) # Track last 3 iterations
+    # Isolate user storage cells or instantiate a fresh scratchpad buffer map row
+    sid = req.session_id.strip() if req.session_id.strip() else "default_vault_channel"
+    if sid not in SESSION_HISTORY_MAPS:
+        SESSION_HISTORY_MAPS[sid] = []
+
+    active_buffer = SESSION_HISTORY_MAPS[sid]
+
+    # Connect rolling history context strings cleanly matching current isolated cell path
+    history_context = " ".join(active_buffer[-3:])
     full_prompt = f"{history_context} {seed_phrase}".strip()
 
     current_text = seed_phrase + " "
@@ -97,17 +108,19 @@ async def network_generate(req: GenerationRequest):
 
     completed_sentence = current_text.strip()
 
-    # Freeze the generated sentence into session history
-    SESSION_HISTORY_BUFFER.append(completed_sentence)
-    if len(SESSION_HISTORY_BUFFER) > 6:
-        SESSION_HISTORY_BUFFER.pop(0)
+    # Freeze the generated sentence natively inside its unique segregated history map track
+    SESSION_HISTORY_MAPS[sid].append(completed_sentence)
+    if len(SESSION_HISTORY_MAPS[sid]) > 6:
+        SESSION_HISTORY_MAPS[sid].pop(0)
 
     return {
         "seed_input": seed_phrase,
         "completed_text": completed_sentence,
         "tokens_evaluated": len(generated_phrases),
-        "session_memory_depth": len(SESSION_HISTORY_BUFFER)
+        "session_id": sid,
+        "session_memory_depth": len(SESSION_HISTORY_MAPS[sid])
     }
+
 
 @app.post("/v1/train")
 async def network_train(req: TrainingRequest):
