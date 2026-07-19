@@ -141,6 +141,13 @@
                 <div id="historyLogView" style="max-height: 250px; overflow-y: auto; font-size: 13px; line-height: 1.6; color: #888888; border-top: 1px dashed #222222; padding-top: 10px;">
                     <span style="font-style: italic;">No sequence blocks registered in current RAM session cache.</span>
                 </div>
+
+                <!-- REAL-TIME ASCII MATRIX TELEMETRY VIEW CARD -->
+                <label style="margin-top: 20px;">// REAL-TIME CORE VECTOR TELEMETRY METRICS:</label>
+                <div id="matrixTelemetryView" style="background: #020202; border: 1px dashed #222222; padding: 15px; font-size: 12px; font-family: 'Courier New', monospace; color: #555555; line-height: 1.4; margin-top: 5px; white-space: pre-wrap;">
+                    [DAEMON MATRIX] Awaiting stochastic generation tracking payload signal...
+                </div>
+
             </div>
 
             <!-- HARVESTER BOX -->
@@ -161,8 +168,10 @@
     <script>
         const API_BASE = "http://127.0.0.1:8000";
         let capturedLogHistory = [];
+        var activeThemeColor = "#00ff66"; // FIXED: BOUND GLOBALLY TO PREVENT TIMING ERRORS
 
         async function triggerGeneration() {
+
             const outBox = document.getElementById("generationOutput");
             outBox.innerHTML = "<span style='color: #666666;'>Streaming 512-HD tensor spaces...</span>";
 
@@ -188,7 +197,21 @@
                     });
                     // Auto-scroll the log container down to track the fresh data trajectories
                     logContainer.scrollTop = logContainer.scrollHeight;
+
+                    // SAFE TELEMETRY CONTAINER UPDATER LOOP
+                    const telContainer = document.getElementById("matrixTelemetryView");
+                    if (telContainer && data.telemetry) {
+                        telContainer.style.color = window.activeThemeColor || "#00ff66";
+
+                        telContainer.innerHTML = '\n=== MATRIX VECTOR STATUS ===\n' +
+                            '[HIDDEN_UNITS] : ' + data.telemetry.hidden_dimensions + ' HD Layer\n' +
+                            '[VOCAB_SIZE]   : ' + data.telemetry.vocabulary_size + ' Active Vectors\n' +
+                            '[TOKEN_EVAL]   : Generated ' + data.telemetry.generated_token_count + ' subwords in RAM\n' +
+                            '[TOKEN_IDS]    : [' + data.telemetry.prompt_token_ids.join(" -> ") + ']\n' +
+                            '============================';
+                    }
                 } else {
+
 
                     outBox.innerText = `❌ CORE ERROR: ${data.detail}`;
                 }
@@ -247,11 +270,14 @@
             if (bodyNode.classList.contains("theme-antagonist")) {
                 bodyNode.classList.remove("theme-antagonist");
                 bodyNode.classList.add("theme-opium");
+                window.activeThemeColor = "#ff0055"; // Bound to window scope safely
             } else {
                 bodyNode.classList.remove("theme-opium");
                 bodyNode.classList.add("theme-antagonist");
+                window.activeThemeColor = "#00ff66"; // Bound to window scope safely
             }
         }
+
     </script>
 </body>
 </html>

@@ -118,8 +118,15 @@ async def network_generate(req: GenerationRequest):
         "completed_text": completed_sentence,
         "tokens_evaluated": len(generated_phrases),
         "session_id": sid,
-        "session_memory_depth": len(SESSION_HISTORY_MAPS[sid])
+        "session_memory_depth": len(SESSION_HISTORY_MAPS[sid]),
+        "telemetry": {
+            "prompt_token_ids": tokenizer.encode(full_prompt),
+            "generated_token_count": len(generated_phrases),
+            "hidden_dimensions": 512,
+            "vocabulary_size": len(tokenizer.vocab)
+        }
     }
+
 
 
 @app.post("/v1/train")
