@@ -142,15 +142,21 @@
                     <span style="font-style: italic;">No sequence blocks registered in current RAM session cache.</span>
                 </div>
 
-                <!-- REAL-TIME ASCII MATRIX TELEMETRY VIEW CARD -->
+                                <!-- REAL-TIME ASCII MATRIX TELEMETRY VIEW CARD -->
                 <label style="margin-top: 20px;">// REAL-TIME CORE VECTOR TELEMETRY METRICS:</label>
                 <div id="matrixTelemetryView" style="background: #020202; border: 1px dashed #222222; padding: 15px; font-size: 12px; font-family: 'Courier New', monospace; color: #555555; line-height: 1.4; margin-top: 5px; white-space: pre-wrap;">
                     [DAEMON MATRIX] Awaiting stochastic generation tracking payload signal...
                 </div>
 
+                <!-- NEW PHASE L REAL-TIME TELEMETRY GRAPH VISUALIZER BARS -->
+                <label style="margin-top: 20px;">// REAL-TIME VECTOR MAGNITUDE SIGNAL GRAPH BARS:</label>
+                <div id="telemetryGraphBars" style="display: flex; align-items: flex-end; gap: 4px; height: 60px; background: #020202; border: 1px dashed #222222; padding: 10px; margin-top: 5px; overflow-x: auto;">
+                    <span style="font-size: 11px; color: #555555; font-style: italic; width: 100%;">No matrix signals detected. Execute pass to draw vector bars.</span>
+                </div>
             </div>
 
             <!-- HARVESTER BOX -->
+
 
             <div class="vamp-card">
                 <h2>// DIALOGUE HARVESTER</h2>
@@ -210,7 +216,22 @@
                             '[TOKEN_IDS]    : [' + data.telemetry.prompt_token_ids.join(" -> ") + ']\n' +
                             '============================';
                     }
+
+                    // FIXED: PHASE L REAL-TIME TELEMETRY GRAPH VISUALIZER BARS ENGINE
+                    const graphContainer = document.getElementById("telemetryGraphBars");
+                    if (graphContainer && data.telemetry && data.telemetry.prompt_token_ids) {
+                        graphContainer.innerHTML = ""; // Clear baseline empty strings
+                        const tIds = data.telemetry.prompt_token_ids;
+                        const currentColor = window.activeThemeColor || "#00ff66";
+
+                        tIds.forEach(function(tokenId) {
+                            // Map token ID integer values safely to an analytical visual bar height bounds percentage
+                            const normalizedHeight = Math.min(100, Math.max(10, (tokenId / 107) * 100));
+                            graphContainer.innerHTML += '<div style="width: 12px; height: ' + normalizedHeight + '%; background-color: ' + currentColor + '; min-width: 12px; transition: height 0.2s;" title="Token ID: ' + tokenId + '"></div>';
+                        });
+                    }
                 } else {
+
 
 
                     outBox.innerText = `❌ CORE ERROR: ${data.detail}`;
