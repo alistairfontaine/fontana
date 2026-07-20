@@ -45,11 +45,12 @@ class TrainingRequest(BaseModel):
 async def root_status():
     return {
         "status": "ONLINE",
-        "engine": "The Fontana Engine Core // ANTAGONIST // STATEFUL",
+        "engine": "The Fontana Engine Core // ANTAGONIST // ISOLATED",
         "architecture": "512-HD Spatial Tensors",
         "ipc_channel": "File-Synchronized Non-Blocking RAM Subprocess",
-        "memory_depth": len(SESSION_HISTORY_BUFFER)
+        "total_active_sessions": len(SESSION_HISTORY_MAPS)
     }
+
 
 @app.post("/v1/generate")
 async def network_generate(req: GenerationRequest):

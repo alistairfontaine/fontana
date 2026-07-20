@@ -199,10 +199,27 @@
                     const logContainer = document.getElementById("historyLogView");
                     logContainer.innerHTML = ""; // Clear baseline empty string
                     capturedLogHistory.forEach((sceneText, idx) => {
-                        logContainer.innerHTML += `<div style="margin-bottom: 12px; border-bottom: 1px dashed #111111; padding-bottom: 8px;"><strong style="color: #ffffff;">SEQUENCE ${idx + 1}:</strong> ${sceneText}</div>`;
+                        // FIXED: PHASE M - STRUCTURAL VOXEL SCREENPLAY FORMATTING ENGINE
+                        let slugHeader = "INT. THE ANTAGONIST VAULT - PALE MOONLIGHT";
+                        if (sceneText.toLowerCase().includes("laboratory") || sceneText.toLowerCase().includes("machinery")) {
+                            slugHeader = "EXT. LABORATORY ARCHIVE - NIGHT";
+                        } else if (sceneText.toLowerCase().includes("frankenstein") || sceneText.toLowerCase().includes("monster")) {
+                            slugHeader = "INT. FRANKENSTEIN CRUCIBLE - DAY";
+                        }
+
+                        logContainer.innerHTML += `
+                        <div style="margin-bottom: 20px; border-bottom: 1px dashed #222222; padding-bottom: 12px; font-family: 'Courier New', monospace; font-size: 13px; text-align: left;">
+                            <div style="color: #888888; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">SCENE ${idx + 1} // ${slugHeader}</div>
+                            <div style="color: #555555; font-style: italic; margin-bottom: 6px; padding-left: 10px;">The matrix pipeline variables update their weights onto disk tracks. Fontana commands the space.</div>
+                            <div style="text-align: center; font-weight: bold; color: #ffffff; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px;">FONTANA VOICE</div>
+                            <div style="max-width: 70%; margin: 0 auto; text-align: left; color: #00ff66; border-left: 2px solid #222222; padding-left: 12px; font-weight: bold; transition: color 0.3s;" class="script-dialogue-text">${sceneText}</div>
+                        </div>`;
                     });
-                    // Auto-scroll the log container down to track the fresh data trajectories
+
+                    const scriptTexts = document.querySelectorAll(".script-dialogue-text");
+                    scriptTexts.forEach(el => { el.style.color = window.activeThemeColor || "#00ff66"; });
                     logContainer.scrollTop = logContainer.scrollHeight;
+
 
                     // SAFE TELEMETRY CONTAINER UPDATER LOOP
                     const telContainer = document.getElementById("matrixTelemetryView");
@@ -297,7 +314,10 @@
                 bodyNode.classList.add("theme-antagonist");
                 window.activeThemeColor = "#00ff66"; // Bound to window scope safely
             }
+            const scriptTexts = document.querySelectorAll(".script-dialogue-text");
+            scriptTexts.forEach(el => { el.style.color = window.activeThemeColor; });
         }
+
 
     </script>
 </body>
