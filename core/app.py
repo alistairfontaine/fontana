@@ -36,6 +36,9 @@ class GenerationRequest(BaseModel):
     seed: str
     max_tokens: int = 75
     session_id: str = "default_vault_channel"
+    temperature: float = 0.32
+    top_k: int = 6
+
 
 
 class TrainingRequest(BaseModel):
@@ -77,7 +80,10 @@ async def network_generate(req: GenerationRequest):
     for _ in range(req.max_tokens):
         # On Step 1, inject the rolling history context; subsequently, trace the current window
         token_ids = tokenizer.encode(full_prompt if _ == 0 else current_text)
-        token_string = " ".join(map(str, token_ids))
+
+        # FIXED: PHASE N - EXPOSE SAMPLING BOUNDS PARAMETERS DIRECTLY OVER INTERPROCESS LOOPS
+        # Appends dynamic slider telemetry variables cleanly right behind the token index string array
+        token_string = " ".join(map(str, token_ids)) + f" | {req.temperature} | {req.top_k}"
 
         stdout_output = brain.submit_prompt(token_string)
 
