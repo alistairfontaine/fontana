@@ -38,6 +38,8 @@ class GenerationRequest(BaseModel):
     session_id: str = "default_vault_channel"
     temperature: float = 0.32
     top_k: int = 6
+    top_p: float = 0.90
+
 
 
 
@@ -78,14 +80,14 @@ async def network_generate(req: GenerationRequest):
     generated_phrases = []
 
     for _ in range(req.max_tokens):
-        # On Step 1, inject the rolling history context; subsequently, trace the current window
         token_ids = tokenizer.encode(full_prompt if _ == 0 else current_text)
 
-        # FIXED: PHASE N - EXPOSE SAMPLING BOUNDS PARAMETERS DIRECTLY OVER INTERPROCESS LOOPS
-        # Appends dynamic slider telemetry variables cleanly right behind the token index string array
-        token_string = " ".join(map(str, token_ids)) + f" | {req.temperature} | {req.top_k}"
+        # FIXED: PHASE P - EXPOSE NUCLEUS SAMPLING CHANNELS DIRECTLY OVER IPC
+        # Appends dynamic top_p slider variables cleanly right behind the selection pool bounds
+        token_string = " ".join(map(str, token_ids)) + f" | {req.temperature} | {req.top_k} | {req.top_p}"
 
         stdout_output = brain.submit_prompt(token_string)
+
 
         if "[ERROR]" in stdout_output:
             raise HTTPException(status_code=500, detail=f"C++ Daemon Failure: {stdout_output}")

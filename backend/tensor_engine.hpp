@@ -8,7 +8,8 @@ namespace Fontana {
     public:
         TensorEngine();
         ~TensorEngine();
-        int predict_next_token(const std::vector<int>& tokens, float custom_temp, int custom_k);
+        int predict_next_token(const std::vector<int>& tokens, float custom_temp, int custom_k, float custom_p);
+
         void process_tokens(const std::vector<int>& tokens);
     };
 }

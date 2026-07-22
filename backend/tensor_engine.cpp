@@ -88,8 +88,7 @@ namespace Fontana {
         }
     };
 
-    int TensorEngine::predict_next_token(const std::vector<int>& tokens, float custom_temp, int custom_k) {
-
+    int TensorEngine::predict_next_token(const std::vector<int>& tokens, float custom_temp, int custom_k, float custom_p) {
         if (tokens.empty()) return 3;
 
         const std::vector<int>& active_tokens = tokens;
@@ -131,7 +130,6 @@ namespace Fontana {
             }
             raw_scores[i] = score;
 
-            // Stable Linear Decay Loop
             if (active_tokens.size() > 3) {
                 for (size_t t = 3; t < active_tokens.size(); ++t) {
                     if (active_tokens[t] == i) {
@@ -142,14 +140,10 @@ namespace Fontana {
             }
         }
 
-        // FIXED: PHASE O - INTERPROCESS PARAMETRIC FLOORS
-        // Dynamically applies user-adjustable slider values passed natively over IPC pipelines
-        // to grant front-end sliders total control over neural matrix distributions in real-time.
         float dynamic_temperature = custom_temp;
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
         int K = std::max(1, std::min(vocab_size, custom_k));
-
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
@@ -161,9 +155,8 @@ namespace Fontana {
             token_probabilities[indices[i]] = 0.0f;
         }
 
-        float base_top_p = 0.90f;
-        float context_expansion_factor = 0.001f * static_cast<float>(active_tokens.size());
-        float target_top_p = std::min(0.95f, base_top_p + context_expansion_factor);
+        // FIXED: PHASE P NUCLEUS SELECTION DYNAMIC CALIBRATION
+        float target_top_p = custom_p;
 
         float cumulative_p = 0.0f;
         for (int i = 0; i < K; ++i) {
@@ -198,10 +191,8 @@ int main() {
     while (std::getline(std::cin, input_line)) {
         if (input_line.empty()) continue;
 
-        // FIXED: PHASE O - STREAM UNBUNDLING AND PIPELINE DELIMITER PARSER
-        // Safely extracts the token strings, parsing the pipe delimiter without throwing a stream panic.
         std::stringstream ss(input_line);
-        std::string tokens_part, delimiter, temp_part, topk_part;
+        std::string tokens_part, temp_part, topk_part, topp_part;
 
         std::getline(ss, tokens_part, '|');
 
@@ -212,21 +203,23 @@ int main() {
             received_tokens.push_back(token_id);
         }
 
-        float slider_temperature = 0.32f; // High-integrity production default fallbacks
+        float slider_temperature = 0.32f;
         int slider_top_k = 6;
+        float slider_top_p = 0.90f;
 
         if (std::getline(ss, temp_part, '|')) {
             std::stringstream(temp_part) >> slider_temperature;
         }
-        if (std::getline(ss, topk_part)) {
+        if (std::getline(ss, topk_part, '|')) {
             std::stringstream(topk_part) >> slider_top_k;
+        }
+        if (std::getline(ss, topp_part)) {
+            std::stringstream(topp_part) >> slider_top_p;
         }
 
         Fontana::TensorEngine engine;
-        int next_token = engine.predict_next_token(received_tokens, slider_temperature, slider_top_k);
+        int next_token = engine.predict_next_token(received_tokens, slider_temperature, slider_top_k, slider_top_p);
         std::cout << next_token << std::endl;
-
     }
     return 0;
 }
-
