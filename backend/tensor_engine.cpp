@@ -88,7 +88,8 @@ namespace Fontana {
         }
     };
 
-    int TensorEngine::predict_next_token(const std::vector<int>& tokens) {
+    int TensorEngine::predict_next_token(const std::vector<int>& tokens, float custom_temp, int custom_k) {
+
         if (tokens.empty()) return 3;
 
         const std::vector<int>& active_tokens = tokens;
@@ -141,22 +142,14 @@ namespace Fontana {
             }
         }
 
-        // FIXED: STEP 2 - CALIBRATED SOFTMAX MATRIX PROBABILITY SCALES
-        // Lifted long-range entropy minimum boundary condition from 0.095f to a healthy 0.18f
-        // to prevent token starvation and give sentence structures natural creative breathing room.
-        float dynamic_temperature = 0.25f;
-        if (active_tokens.size() <= 4) {
-            dynamic_temperature = 0.095f;
-        } else {
-            float sequence_decay_factor = 0.001f * static_cast<float>(active_tokens.size());
-            dynamic_temperature = std::max(0.32f, 0.40f - sequence_decay_factor);
-        }
-
+        // FIXED: PHASE O - INTERPROCESS PARAMETRIC FLOORS
+        // Dynamically applies user-adjustable slider values passed natively over IPC pipelines
+        // to grant front-end sliders total control over neural matrix distributions in real-time.
+        float dynamic_temperature = custom_temp;
         std::vector<float> token_probabilities = activation.softmax(raw_scores, dynamic_temperature);
 
-        // FIXED: BROADENED TOP-K TRUNCATION FILTER GATE
-        // Scaled selection horizon parameter from K=2 up to an unlocked K=6 choices.
-        int K = 6;
+        int K = std::max(1, std::min(vocab_size, custom_k));
+
         std::vector<size_t> indices(vocab_size);
         std::iota(indices.begin(), indices.end(), 0);
 
@@ -204,15 +197,36 @@ int main() {
     std::string input_line;
     while (std::getline(std::cin, input_line)) {
         if (input_line.empty()) continue;
-        std::vector<int> received_tokens;
+
+        // FIXED: PHASE O - STREAM UNBUNDLING AND PIPELINE DELIMITER PARSER
+        // Safely extracts the token strings, parsing the pipe delimiter without throwing a stream panic.
         std::stringstream ss(input_line);
+        std::string tokens_part, delimiter, temp_part, topk_part;
+
+        std::getline(ss, tokens_part, '|');
+
+        std::vector<int> received_tokens;
+        std::stringstream tokens_stream(tokens_part);
         int token_id;
-        while (ss >> token_id) {
+        while (tokens_stream >> token_id) {
             received_tokens.push_back(token_id);
         }
+
+        float slider_temperature = 0.32f; // High-integrity production default fallbacks
+        int slider_top_k = 6;
+
+        if (std::getline(ss, temp_part, '|')) {
+            std::stringstream(temp_part) >> slider_temperature;
+        }
+        if (std::getline(ss, topk_part)) {
+            std::stringstream(topk_part) >> slider_top_k;
+        }
+
         Fontana::TensorEngine engine;
-        int next_token = engine.predict_next_token(received_tokens);
+        int next_token = engine.predict_next_token(received_tokens, slider_temperature, slider_top_k);
         std::cout << next_token << std::endl;
+
     }
     return 0;
 }
+
