@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,8 +9,8 @@ from tokenizer import FontanaTokenizer
 
 app = FastAPI(
     title="The Fontana Engine Core REST API",
-    version="4.0",
-    description="Stateful Persistent Asynchronous Background Network Daemon Gateway Layer"
+    version="4.6",
+    description="Stateful Persistent Multi-User Asynchronous Background Network Daemon Gateway Layer with Live Performance Telemetry"
 )
 
 app.add_middleware(
@@ -27,10 +28,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 dataset_path = os.path.join(project_root, "dataset.txt")
 
-# FIXED: PHASE J - MULTI-USER ISOLATED SESSION MEMORY DICTIONARY MAPS
-# Dynamic dictionary maps tracking independent history lookback channels safely in RAM
+# Multi-User Isolated Session Memory Dictionary Maps
 SESSION_HISTORY_MAPS = {}
-
 
 class GenerationRequest(BaseModel):
     seed: str
@@ -39,9 +38,6 @@ class GenerationRequest(BaseModel):
     temperature: float = 0.32
     top_k: int = 6
     top_p: float = 0.90
-
-
-
 
 class TrainingRequest(BaseModel):
     text: str
@@ -56,22 +52,20 @@ async def root_status():
         "total_active_sessions": len(SESSION_HISTORY_MAPS)
     }
 
-
 @app.post("/v1/generate")
 async def network_generate(req: GenerationRequest):
     global SESSION_HISTORY_MAPS
+    start_time_stamp = time.perf_counter()
     seed_phrase = req.seed.strip()
     if not seed_phrase:
         raise HTTPException(status_code=400, detail="Seed phrase cannot be empty.")
 
-    # Isolate user storage cells or instantiate a fresh scratchpad buffer map row
     sid = req.session_id.strip() if req.session_id.strip() else "default_vault_channel"
     if sid not in SESSION_HISTORY_MAPS:
         SESSION_HISTORY_MAPS[sid] = []
 
     active_buffer = SESSION_HISTORY_MAPS[sid]
 
-    # Connect rolling history context strings cleanly matching current isolated cell path
     history_context = " ".join(active_buffer[-3:])
     full_prompt = f"{history_context} {seed_phrase}".strip()
 
@@ -81,13 +75,9 @@ async def network_generate(req: GenerationRequest):
 
     for _ in range(req.max_tokens):
         token_ids = tokenizer.encode(full_prompt if _ == 0 else current_text)
-
-        # FIXED: PHASE P - EXPOSE NUCLEUS SAMPLING CHANNELS DIRECTLY OVER IPC
-        # Appends dynamic top_p slider variables cleanly right behind the selection pool bounds
         token_string = " ".join(map(str, token_ids)) + f" | {req.temperature} | {req.top_k} | {req.top_p}"
 
         stdout_output = brain.submit_prompt(token_string)
-
 
         if "[ERROR]" in stdout_output:
             raise HTTPException(status_code=500, detail=f"C++ Daemon Failure: {stdout_output}")
@@ -95,7 +85,6 @@ async def network_generate(req: GenerationRequest):
         try:
             predicted_id = int(stdout_output.strip())
 
-            # STABLE ARRAY TERMINATION CHECK CONDITIONS
             if predicted_id == 0 or predicted_id == 1 or predicted_id == 2:
                 break
 
@@ -117,10 +106,11 @@ async def network_generate(req: GenerationRequest):
 
     completed_sentence = current_text.strip()
 
-    # Freeze the generated sentence natively inside its unique segregated history map track
     SESSION_HISTORY_MAPS[sid].append(completed_sentence)
     if len(SESSION_HISTORY_MAPS[sid]) > 6:
         SESSION_HISTORY_MAPS[sid].pop(0)
+
+    execution_velocity_ms = round((time.perf_counter() - start_time_stamp) * 1000, 2)
 
     return {
         "seed_input": seed_phrase,
@@ -132,11 +122,10 @@ async def network_generate(req: GenerationRequest):
             "prompt_token_ids": tokenizer.encode(full_prompt),
             "generated_token_count": len(generated_phrases),
             "hidden_dimensions": 512,
-            "vocabulary_size": len(tokenizer.vocab)
+            "vocabulary_size": len(tokenizer.vocab),
+            "latency_ms": execution_velocity_ms
         }
     }
-
-
 
 @app.post("/v1/train")
 async def network_train(req: TrainingRequest):

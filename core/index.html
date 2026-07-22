@@ -115,6 +115,7 @@
 
         <div class="status-strip">
             <span style="color: #888888;">SYS_DAEMON: ACTIVE_IN_RAM</span>
+            <span id="latencyTracker" style="color: #888888; font-variant-numeric: tabular-nums;">LATENCY: 0.00ms</span>
             <span class="status-badge">REST_GATEWAY: ONLINE // 108_BPE</span>
         </div>
 
@@ -250,6 +251,13 @@
                             '[TOKEN_EVAL]   : Generated ' + data.telemetry.generated_token_count + ' subwords in RAM\n' +
                             '[TOKEN_IDS]    : [' + data.telemetry.prompt_token_ids.join(" -> ") + ']\n' +
                             '============================';
+
+                        // FIXED: PHASE Q - REAL-TIME VISUAL PERFORMANCE DEBUGGER INDICATOR
+                        const timeContainer = document.getElementById("latencyTracker");
+                        if (timeContainer && data.telemetry.latency_ms !== undefined) {
+                            timeContainer.innerText = 'LATENCY: ' + data.telemetry.latency_ms + 'ms';
+                            timeContainer.style.color = window.activeThemeColor || "#00ff66";
+                        }
                     }
 
                     // FIXED: PHASE L REAL-TIME TELEMETRY GRAPH VISUALIZER BARS ENGINE
