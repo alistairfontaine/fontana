@@ -21,8 +21,12 @@ class FontanaVocabExpander:
                 target_top_n = 100
 
         print(f"[FONTANA O³] Dynamic Vocab Sweep: Adjusting harvesting threshold to top_{target_top_n} patterns.")
-        discovered_pairs = self.mapper.extract_dynamic_subwords(top_n=target_top_n)
-        new_syllables = [item[0] for item in discovered_pairs if isinstance(item, tuple)]
+        # extract_dynamic_subwords() returns a list of syllable STRINGS (it already
+        # does `[item[0] for item in counter.most_common(...)]` internally). The old
+        # `if isinstance(item, tuple)` guard was therefore always False, so no syllable
+        # ever survived and the whole expansion silently did nothing (added_count stayed
+        # 0 while still printing "Injected N new subwords"). Use the strings directly.
+        new_syllables = self.mapper.extract_dynamic_subwords(top_n=target_top_n)
 
         if not os.path.exists(self.tokenizer_path):
             return
