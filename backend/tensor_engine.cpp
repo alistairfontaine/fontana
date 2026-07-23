@@ -71,12 +71,21 @@ namespace Fontana {
     public:
         std::vector<float> softmax(const std::vector<float>& raw_scores, float temperature) {
             std::vector<float> probabilities(raw_scores.size());
-            float sum_exp = 0.0f;
 
             if (temperature < 0.04f) temperature = 0.04f;
 
+            // FIXED: PR #2 BY TAPIWAMAKANDIGONA - NUMERICALLY STABLE SOFTMAX MAX-LOGIT SUBTRACTION
+            // Extracts the maximum score from the logit array to anchor all exponents <= 0.0f
+            float max_score = raw_scores[0];
+            for (size_t i = 1; i < raw_scores.size(); ++i) {
+                if (raw_scores[i] > max_score) {
+                    max_score = raw_scores[i];
+                }
+            }
+
+            float sum_exp = 0.0f;
             for (size_t i = 0; i < raw_scores.size(); ++i) {
-                probabilities[i] = std::exp(raw_scores[i] / temperature);
+                probabilities[i] = std::exp((raw_scores[i] - max_score) / temperature);
                 sum_exp += probabilities[i];
             }
 
@@ -87,6 +96,7 @@ namespace Fontana {
             return probabilities;
         }
     };
+
 
     int TensorEngine::predict_next_token(const std::vector<int>& tokens, float custom_temp, int custom_k, float custom_p) {
         if (tokens.empty()) return 3;
