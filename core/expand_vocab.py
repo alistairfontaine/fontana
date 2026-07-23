@@ -12,17 +12,17 @@ class FontanaVocabExpander:
         self.dataset_path = os.path.join(os.path.dirname(script_dir), "dataset.txt")
 
     def optimize_system_vocabulary(self):
-        # FIXED: DYNAMIC SCALE-FACTOR INJECTOR
-        # Dynamically calculate token harvesting sweep depth based on text corpus size
+        # Dynamic Scale-Factor Injector
         target_top_n = 8
         if os.path.exists(self.dataset_path):
             file_size = os.path.getsize(self.dataset_path)
-            if file_size > 100000: # If corpus exceeds 100 Kilobytes, widen the dictionary sweep
+            if file_size > 100000:
                 target_top_n = 100
 
         print(f"[FONTANA O³] Dynamic Vocab Sweep: Adjusting harvesting threshold to top_{target_top_n} patterns.")
-        discovered_pairs = self.mapper.extract_dynamic_subwords(top_n=target_top_n)
-        new_syllables = [item[0] for item in discovered_pairs if isinstance(item, tuple)]
+
+        # FIXED: PR #4 BY TAPIWAMAKANDIGONA
+        new_syllables = self.mapper.extract_dynamic_subwords(top_n=target_top_n)
 
         if not os.path.exists(self.tokenizer_path):
             return
