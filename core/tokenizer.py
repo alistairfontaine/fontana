@@ -54,9 +54,18 @@ class FontanaTokenizer:
             'ith'
         ]
 
-        start_index = len(base_chars) + 4
-        for i, syllable in enumerate(subwords):
-            self.vocab[syllable] = start_index + i
+        # Skip subwords that already exist in the vocab (e.g. the single characters
+        # 's', 'i', 'a', 't', 'y' above). Re-assigning them would overwrite their
+        # original single-character IDs, leaving those IDs orphaned (encodable by the
+        # engine but undecodable -> silently dropped as ""), and would push the last
+        # subwords past the engine's fixed vocab_size of 107, where they can never be
+        # predicted and look up a zero embedding. Deduplicated, the vocab is exactly
+        # 107 entries (IDs 0-106), matching the tensor engine.
+        next_index = len(base_chars) + 4
+        for syllable in subwords:
+            if syllable not in self.vocab:
+                self.vocab[syllable] = next_index
+                next_index += 1
 
         # Establish inverse vocabulary dimensions for fast decoding loops
         self.inverse_vocab = {v: k for k, v in self.vocab.items()}
