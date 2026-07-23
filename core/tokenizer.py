@@ -46,7 +46,12 @@ class FontanaTokenizer:
         # Build an internal compilation regex sorting longest subwords first to prevent character splitting
         sorted_patterns = sorted(list(self.vocab.keys()), key=len, reverse=True)
         escaped_patterns = [re.escape(p) for p in sorted_patterns if p not in ["[PAD]", "[UNK]", "[BOS]", "[EOS]"]]
-        self.tokenizer_regex = re.compile("|".join(escaped_patterns))
+
+        # FIXED: PR #1 BY TAPIWAMAKANDIGONA - TOKENIZER CATCH-ALL UNK FILTER
+        # Appends a single-char catch-all as the lowest-priority alternative and enforces DOTALL parsing
+        escaped_patterns.append(".")
+        self.tokenizer_regex = re.compile("|".join(escaped_patterns), flags=re.DOTALL)
+
 
     def encode(self, text: str) -> list[int]:
         """Parses human sentences into optimized structural subword integer strings."""
