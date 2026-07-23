@@ -17,46 +17,28 @@ class FontanaTokenizer:
 
         # Step 2: Inject structural multi-character subwords and syllables directly into the index pool
         subwords = [
-            'the',
-            'and',
-            'ing',
-            'ion',
-            'ent',
-            'pro',
-            'con',
-            'sta',
-            'font',
-            'brain',
-            'logic',
-            'tech',
-            'music',
-            'code',
-            'system',
-            'auto',
-            'fontana',
-            'istair',
-            's',
-            'i',
-            'a',
-            't',
-            'y',
-            'ste',
-            'ine',
-            'ana',
-            'tio',
-            'sys',
-            'yst',
-            'ook',
-            'loo',
-            'oks',
-            'ell',
-            'lli',
-            'ith'
+            'the', 'and', 'ing', 'ion', 'ent', 'pro', 'con', 'sta', 'font', 'brain',
+            'logic', 'tech', 'music', 'code', 'system', 'auto', 'fontana', 'istair',
+            's', 'i', 'a', 't', 'y', 'ste', 'ine', 'ana', 'tio', 'sys',
+            'yst', 'ook', 'loo', 'oks', 'ell', 'lli', 'ith', 'hat', 'tha',
+            'ere', 'her', 'wit', 'thi', 'ave', 'ter', 'ver', 'oul', 'ght',
+            'ome', 'ear', 'uld', 'hen', 'hav', 'all', 'whi', 'rea', 'hin',
+            'eve', 'whe', 'hou', 'his', 'ess', 'our', 'igh', 'ted', 'for',
+            'you', 'nce', 'ill', 'ove', 'res', 'hic', 'ugh', 'oun', 'ate',
+            'ore', 'ich', 'rom', 'fro', 'han', 'red', 'wer', 'cou', 'ust',
+            'est', 'oug', 'com', 'ive', 'ain', 'tho', 'und', 'int', 'tin',
+            'som', 'ers', 'ati', 'oth', 'eat', 'ous', 'ble', 'ind', 'een',
+            'ake', 'out', 'hea', 'rou', 'art', 'sed', 'wha', 'ten', 'min',
+            'nde', 'ned', 'str', 'ame', 'mor', 'ant', 'ard', 'kin', 'end',
+            'ect', 'der', 'nte', 'ose'
         ]
 
-        start_index = len(base_chars) + 4
-        for i, syllable in enumerate(subwords):
-            self.vocab[syllable] = start_index + i
+        # FIXED: PR #3 BY TAPIWAMAKANDIGONA
+        next_id = len(base_chars) + 4
+        for syllable in subwords:
+            if syllable not in self.vocab:
+                self.vocab[syllable] = next_id
+                next_id += 1
 
         # Establish inverse vocabulary dimensions for fast decoding loops
         self.inverse_vocab = {v: k for k, v in self.vocab.items()}
@@ -69,7 +51,6 @@ class FontanaTokenizer:
     def encode(self, text: str) -> list[int]:
         """Parses human sentences into optimized structural subword integer strings."""
         tokens = [self.vocab["[BOS]"]]
-
         matches = self.tokenizer_regex.findall(text)
 
         for segment in matches:
