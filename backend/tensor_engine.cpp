@@ -75,8 +75,20 @@ namespace Fontana {
 
             if (temperature < 0.04f) temperature = 0.04f;
 
+            // Subtract the max logit before exponentiating (numerically-stable softmax).
+            // exp() is otherwise applied to raw_score/temperature directly: at low
+            // temperature (min 0.04) a logit of ~30 becomes exp(750+), which overflows
+            // float to +inf, so sum_exp is inf and every probability becomes NaN. The
+            // downstream std::discrete_distribution then silently falls back to index 0
+            // (a stop token), collapsing generation. Shifting by the max is mathematically
+            // identical to the plain softmax and keeps every exponent <= 0.
+            float max_score = raw_scores.empty() ? 0.0f : raw_scores[0];
             for (size_t i = 0; i < raw_scores.size(); ++i) {
-                probabilities[i] = std::exp(raw_scores[i] / temperature);
+                if (raw_scores[i] > max_score) max_score = raw_scores[i];
+            }
+
+            for (size_t i = 0; i < raw_scores.size(); ++i) {
+                probabilities[i] = std::exp((raw_scores[i] - max_score) / temperature);
                 sum_exp += probabilities[i];
             }
 
