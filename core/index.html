@@ -167,9 +167,14 @@
                 <div id="telemetryGraphBars" style="display: flex; align-items: flex-end; gap: 4px; height: 60px; background: #020202; border: 1px dashed #222222; padding: 10px; margin-top: 5px; overflow-x: auto;">
                     <span style="font-size: 11px; color: #555555; font-style: italic; width: 100%;">No matrix signals detected. Execute pass to draw vector bars.</span>
                 </div>
+
+                <!-- NEW PHASE R REAL-TIME PARAMETER WEIGHT GRAPH NODE CANVAS VISUALIZER -->
+                <label style="margin-top: 20px;">// REAL-TIME TENSOR WEIGHT GRAPH NODE CONSTELLATION CANVAS:</label>
+                <canvas id="weightNodeCanvas" width="714" height="150" style="background: #020202; border: 1px dashed #222222; margin-top: 5px; display: block;"></canvas>
             </div>
 
             <!-- HARVESTER BOX -->
+
 
 
             <div class="vamp-card">
@@ -273,7 +278,65 @@
                             graphContainer.innerHTML += '<div style="width: 12px; height: ' + normalizedHeight + '%; background-color: ' + currentColor + '; min-width: 12px; transition: height 0.2s;" title="Token ID: ' + tokenId + '"></div>';
                         });
                     }
+
+                    // FIXED: PHASE R REAL-TIME PARAMETER WEIGHT GRAPH NODE CANVAS ENGINE
+                    const canvas = document.getElementById("weightNodeCanvas");
+                    if (canvas && data.telemetry && data.telemetry.prompt_token_ids) {
+                        const ctx = canvas.getContext("2d");
+                        const tIds = data.telemetry.prompt_token_ids;
+                        const currentColor = window.activeThemeColor || "#00ff66";
+
+                        // Clear previous matrix projection frame safely
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        if (tIds.length > 0) {
+                            const padding = 30;
+                            const usableWidth = canvas.width - (padding * 2);
+                            const stepX = tIds.length > 1 ? usableWidth / (tIds.length - 1) : usableWidth;
+
+                            let nodeCoordinates = [];
+
+                            // Map token IDs into geometric coordinate points
+                            tIds.forEach(function(tokenId, index) {
+                                const posX = padding + (index * stepX);
+                                // Alternating wave patterns to create an advanced neural constellation layout grid
+                                const waveOffset = Math.sin(index * 1.5) * 25;
+                                const posY = (canvas.height / 2) + waveOffset - ((tokenId / 194) * 35);
+                                nodeCoordinates.push({ x: posX, y: posY, id: tokenId });
+                            });
+
+                            // Draw vector constellation trace lines
+                            ctx.beginPath();
+                            ctx.strokeStyle = currentColor;
+                            ctx.lineWidth = 1;
+                            ctx.setLineDash([2, 4]); // Brutalist dashed mapping tracks
+
+                            nodeCoordinates.forEach(function(pt, idx) {
+                                if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                                else ctx.lineTo(pt.x, pt.y);
+                            });
+                            ctx.stroke();
+                            ctx.setLineDash([]); // Reset line style
+
+                            // Draw the parameter weight node intersection points
+                            nodeCoordinates.forEach(function(pt) {
+                                ctx.beginPath();
+                                ctx.arc(pt.x, pt.y, 4, 0, 2 * Math.PI);
+                                ctx.fillStyle = "#000000";
+                                ctx.fill();
+                                ctx.strokeStyle = currentColor;
+                                ctx.lineWidth = 2;
+                                ctx.stroke();
+
+                                // Print tiny brutalist token ID tags right above nodes
+                                ctx.fillStyle = "#555555";
+                                ctx.font = "9px monospace";
+                                ctx.fillText(pt.id, pt.x - 6, pt.y - 8);
+                            });
+                        }
+                    }
                 } else {
+
 
 
 
@@ -342,7 +405,17 @@
             }
             const scriptTexts = document.querySelectorAll(".script-dialogue-text");
             scriptTexts.forEach(el => { el.style.color = window.activeThemeColor; });
+
+            // Force intermediate canvas redraw to hot-swap constellation strings on click passes
+            const canvas = document.getElementById("weightNodeCanvas");
+            if (canvas && window.capturedLogHistory && window.capturedLogHistory.length > 0) {
+                const ctx = canvas.getContext("2d");
+                ctx.strokeStyle = window.activeThemeColor;
+                // Simple stroke repaint to map color layout state changes
+                ctx.stroke();
+            }
         }
+
 
 
     </script>
