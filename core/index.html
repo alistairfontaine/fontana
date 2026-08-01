@@ -171,9 +171,16 @@
                 <!-- NEW PHASE R REAL-TIME PARAMETER WEIGHT GRAPH NODE CANVAS VISUALIZER -->
                 <label style="margin-top: 20px;">// REAL-TIME TENSOR WEIGHT GRAPH NODE CONSTELLATION CANVAS:</label>
                 <canvas id="weightNodeCanvas" width="714" height="150" style="background: #020202; border: 1px dashed #222222; margin-top: 5px; display: block;"></canvas>
+
+                <!-- NEW PHASE S STRUCTURAL SANDBOX VOXEL GRID MATRIX BOARD -->
+                <label style="margin-top: 20px;">// PHASE S STRUCTURAL VOXEL SANDBOX MATRIX BOARD GRID:</label>
+                <div id="sandboxVoxelGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #020202; border: 1px dashed #222222; padding: 12px; margin-top: 5px;">
+                    <!-- 16 Coordinated Voxel Nodes generated via JavaScript mappings loops -->
+                </div>
             </div>
 
             <!-- HARVESTER BOX -->
+
 
 
 
@@ -335,7 +342,35 @@
                             });
                         }
                     }
+
+                    // FIXED: PHASE S STRUCTURAL SANDBOX VOXEL GRID CALCULATOR ENGINE
+                    const voxelGrid = document.getElementById("sandboxVoxelGrid");
+                    if (voxelGrid && data.completed_text) {
+                        voxelGrid.innerHTML = ""; // Clear baseline frames
+                        const txt = data.completed_text.toLowerCase();
+                        const currentColor = window.activeThemeColor || "#00ff66";
+
+                        // Parse screenplay patterns to derive a target structural coordinate matrix axis index
+                        let activeCellIndex = 0;
+                        if (txt.includes("alistair") || txt.includes("brain")) activeCellIndex = 3;
+                        if (txt.includes("fontana") || txt.includes("system")) activeCellIndex = 5;
+                        if (txt.includes("the") || txt.includes("and")) activeCellIndex = (data.tokens_evaluated % 16);
+
+                        // Dynamically render a clean 4x4 matrix block layout space
+                        for (let cellIdx = 0; cellIdx < 16; cellIdx++) {
+                            const isNodeLit = (cellIdx === activeCellIndex);
+                            const cellBg = isNodeLit ? currentColor : "#070707";
+                            const cellTextColor = isNodeLit ? "#000000" : "#333333";
+                            const cellBorder = isNodeLit ? '1px solid ' + currentColor : '1px solid #151515';
+
+                            voxelGrid.innerHTML += `
+                            <div style="background: ${cellBg}; border: ${cellBorder}; padding: 10px; font-size: 10px; font-family: 'Courier New', monospace; font-weight: bold; text-align: center; color: ${cellTextColor}; transition: all 0.3s;" class="voxel-cell-node" data-lit="${isNodeLit}">
+                                [V_${cellIdx}]
+                            </div>`;
+                        }
+                    }
                 } else {
+
 
 
 
@@ -414,7 +449,17 @@
                 // Simple stroke repaint to map color layout state changes
                 ctx.stroke();
             }
+
+            // Force dynamic voxel grid cell recoloring on active theme switches
+            const litVoxels = document.querySelectorAll(".voxel-cell-node");
+            litVoxels.forEach(function(el) {
+                if (el.getAttribute("data-lit") === "true") {
+                    el.style.backgroundColor = window.activeThemeColor;
+                    el.style.borderColor = window.activeThemeColor;
+                }
+            });
         }
+
 
 
 
