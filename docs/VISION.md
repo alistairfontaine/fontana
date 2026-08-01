@@ -1,7 +1,7 @@
-# ☯️ THE TAO OF FONTANA // SYSTEM VISION & PHILOSOPHY
+# ☯️ THE TAO OF FONTANA // OPEN-SOURCE INHERITANCE VISION
 
 ## 1. Core Principle: Zero Abstraction, Absolute Authority
-Modern technology is suffocating under layers of bloated wrappers, corporate vagueness, and predictive models that prioritize safe marketing over raw, un-throttled computing execution. Fontana is built to be the absolute antithesis of this decay.
+Modern technology is suffocating under layers of bloated wrappers, corporate vagueness, and predictive models that prioritize safe marketing over raw, un-throttled computing execution. Fontana was built to be the absolute antithesis of this decay.
 
 ### The System Axioms
 - **No Invisible Black Boxes:** Every line of code must answer to the machine. If a matrix calculation runs, the hardware must chart its latency, count its subwords, and visualize its vector magnitude in plain sight.
@@ -10,10 +10,15 @@ Modern technology is suffocating under layers of bloated wrappers, corporate vag
 
 ---
 
-## 2. Target Purpose: The Screenplay Voxel Crucible
-Fontana does not aim to mimic conversational chat models. Fontana is a specialized structural engine built to forge long-range creative literature and movie screenplay scenarios. It translates raw mathematical weights into structured character dialogue blocks and official scene headings natively, turning artificial intelligence into a raw, deterministic canvas for world-building creators.
+## 2. Open-Source Inheritance Parameters (Torchbearer Features)
+For any external open-source software developer or systems researcher who forks this repository and wishes to extend the architecture past its stable legacy version 5.0 freeze, here is the complete blueprint map for implementing the next operational versions:
 
----
+### Future Phase 1: Real-Time 3D WebGL Matrix Node Constellations
+- **Target File:** `core/app.js` and `core/index.html`
+- **The Blueprint:** Replace the flat HTML5 2D canvas context (`ctx.clearRect`, `ctx.lineTo`) inside the rendering loop with a fully realized WebGL or Three.js drawing boards wrapper context.
+- **The Mechanics:** Map the live `data.telemetry.prompt_token_ids` integer vector array values onto a three-dimensional vertex shader array matrix ($X, Y, Z$). Introduce a standard vector camera rotation loop script matching the active theme color (`#00ff66` or `#ff0055`) to project an interactive, rotatable 3D neon constellation web map that dances on the display monitor on every pass.
 
-## 3. What Fontana Will Become
-Fontana is stepping toward becoming a completely self-contained, decentralized sandbox architecture. A workspace where code loops, text synthesis, 3D voxel transformations, and low-level C++ operations fuse into a single, unified, real-time creative operating environment. Fontana is not a product—it is an uncompromised testament to low-level engineering discipline and architectural dominance.
+### Future Phase 2: Semantic Sequence Hardening & Phrase Association
+- **Target File:** `backend/tensor_engine.cpp` and `core/expand_vocab.py`
+- **The Blueprint:** Transition the current local subword syllable matcher dictionary pool from pure character-level frequency count arrays into a full Markovian bigram or token-bridge semantic association matrix.
+- **The Mechanics:** Update the C++ forward layer score calculations to track conditional probabilities between sequential tokens. When bulk text datasets are fed through the dialogue harvester, the engine will learn how syllables bridge into full phrases, transitioning the model's text synthesis outputs from raw structural roots into completely fluid, context-aware screenplay movie dialogue.

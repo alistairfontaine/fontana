@@ -1,11 +1,11 @@
-# <img src="assets/logo.png" alt="THE FONTANA AI ENGINE CORE" width="100%">
+# <img src="assets/banner.png" alt="THE FONTANA AI ENGINE CORE" width="100%">
 
-# 🧭 The Fontana Engine Core (v4.7)
-### An Audited, Multi-Parametric Hybrid C++/FastAPI Real-Time Neural Text Synthesis & Screenplay Architecture
+# 🧭 The Fontana Engine Core (v5.0-Legacy)
+### An Audited, Multi-Parametric Hybrid C++/FastAPI Local Neural Text Synthesis Engine & Screenplay Workbench
 
 Built by **Alistair Fontaine** in Bulawayo, Zimbabwe.
 
-The Fontana Engine Core is an audited, low-level hybrid-language neural text synthesis platform engineered specifically to eliminate abstraction, maximize structural data integrity, and enforce an absolute, step-by-step **Order of Operations (O³)**. Reaching its historic **100th commit milestone**, the platform features a fully de-duplicated subword tokenizer, a numerically stable max-logit activation layer, multi-tenant memory sandboxing, and real-time hardware clock performance visualizers. Every weight matrix forward pass and stateful lookback context array stream is manually written, compiled natively, and executed locally without a single trace of commercial black-box APIs.
+The Fontana Engine Core is an uncompromised, low-level hybrid-language neural text synthesis platform engineered specifically to eliminate corporate black-box abstraction, maximize data integrity, and provide an absolute, step-by-step **Order of Operations (O³)** environment. Reaching its complete stable baseline of **106 commits**, this framework acts as a localized AI inference workbench. It bypasses commercial APIs entirely, running zero-overhead matrix math passes locally in RAM cells to demonstrate how raw linguistic subwords map onto spatial hardware telemetry.
 
 ---
 
@@ -18,35 +18,35 @@ pkill -f tensor_engine_binary && pkill -f uvicorn && fuser -k 8000/tcp && fuser 
 
 ---
 
-## 🚀 Audited Architectural Milestones & System Core
+## 🌍 What Fontana Does, Who Uses It, & How It Helps the World
 
-### 1. Hybrid Cross-Language Ingestion Architecture
-- **Persistent Subprocess Background Daemon:** Boots your ultra-fast compiled C++ engine core once into volatile RAM cache storage tracks via long-lived asynchronous `subprocess.Popen` pipelines, keeping the neural parameters hot and responsive for sub-millisecond thread execution.
-- **Asynchronous REST API Gateway:** Full FastAPI network abstraction layer utilizing non-blocking asynchronous event loops to pipe JSON telemetry tokens cleanly back and forth over local loopback ports.
+### 1. What It Does
+Fontana acts as a local linguistic tensor cruncher. It tokenizes raw input text into syllable-aware subwords via a de-duplicated BPE pattern matcher, streams them over loopback sockets into a persistent background C++ subprocess daemon, maps them to high-density matrices, and projects the resulting token sequences as live visual data. It formats outputs into standard screenplay segments while providing real-time sliding control over the underlying mathematics.
 
-### 2. High-Integrity Subword Syllable Tokenization [PR #1 & PR #3 Audited]
-- **108-Line Regex BPE Pattern Matcher:** Syllable-aware subword extraction utility utilizing a single-character catch-all alternative and `re.DOTALL` flags to permanently protect data streams against silent character drops or input corruption.
-- **De-duplicated Vocabulary Index Mapping:** Strict dictionary constraints that prevent integer collisions between base characters and custom subword syllables, matching your active vocabulary size perfectly to your low-level C++ parameters.
+### 2. Who Will Use It
+- **Systems Architects & AI Researchers:** Engineers who want to study cross-language interprocess communication (IPC) and numerical activation stability without renting hyper-scale cloud servers.
+- **Independent Creative Software Developers:** Creators looking for a lightweight, air-gapped, brutalist text-synthesis control panel that can be embedded directly into local application pipelines.
+- **Open-Source Contributors:** Systems developers seeking a clean, unpolluted C++/Python baseline to test advanced sampling filters, tensor shard splitting, or hardware latency debugging.
 
-### 3. Numerically Stable Sequence Calibration [PR #2 & PR #4 Audited]
-- **Max-Logit Subtraction Softmax Activation:** Fine-tuned activation layer inside `backend/tensor_engine.cpp` that extracts the maximum score from raw logits and subtracts it before exponentiation, ensuring complete immunity to floating-point registers overflow and `NaN` probability failures.
-- **Un-throttled Parametric Ingestion Pipes:** Multi-parametric command-line stream unbundling utilizing independent string variables to extract user-adjustable slider values (`temperature`, `top_k`, `top_p`) across interprocess loops in live runtime.
-
-### 4. Stateful Session Memory & Brutalist Command Workspace
-- **Multi-Tenant Memory Sandboxing:** Full dictionary isolation mapping rows keyed to unique, incoming session payload tokens (`session_id`), allowing completely separate characters or screenplay threads to execute in parallel inside system memory without state pollution.
-- **Brutalist Antagonist vs. Opium Web UI Vault:** High-contrast minimalist frontend interface built in pure HTML/CSS. Features a non-blocking class-based hot-swapper to flip between **Antagonist Green (`#00ff66`)** and **Opium Crimson Red (`#ff0055`)** inside Firefox with a single mouse click.
-- **Voxel Screenplay Auto-Typesetting Engine:** Integrated layout parser that dynamically intercepts raw token outputs and packages them into industry-standard screenplay formatting scripts directly on your screen.
-
-### 5. Live Hardware Vector & Performance Telemetry Trackers
-- **Real-Time ASCII Status Dashboard:** Parses dynamic neural parameter returns and pipes them into a dedicated container panel layout inside Firefox, tracking active token paths and hidden unit layer configurations on every pass.
-- **Dynamic Vector Magnitude Graph Bars:** Converts live raw token ID matrices into responsive visual CSS flex indicator blocks that paint heights dynamically to visually chart data magnitude changes inside system memory.
-- **Monotonic Hardware Clock Tracker:** Captures microsecond execution latency deltas (`time.perf_counter()`) across the C++ IPC pipe line to display live computational velocity benchmarks on your dashboard in real-time.
+### 3. How It Helps the World
+Fontana counters the modern tech industry's hyper-centralization and dependency inflation. By proving that a fully operational, multi-parametric AI telemetry workbench can be built completely from scratch using nothing but standard programming libraries, it democratizes foundational computer science logic. It provides an uncompromised educational blueprint for writing secure, memory-isolated, high-velocity software applications that run entirely on the user's terms, protecting privacy and bypassing corporate data-harvesting gatekeepers.
 
 ---
 
-## 📂 Core Documentation Map
+## 🚀 Architectural Core Features
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — The technical nitty-gritty specifications detailing how Fontana was constructed from absolute flat zero variables.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Chronological history tracking where our architecture came from, where we are sitting, and our unpolluted future parameters.
-- [`docs/MANUAL.md`](docs/MANUAL.md) — Universal operational guide for deploying, testing, and managing the multi-parametric control vault.
-- [`docs/VISION.md`](docs/VISION.md) — The fundamental philosophy, target purpose, and systemic Tao of Fontana.
+- **persistent Subprocess Daemon:** Boots a compiled C++ inference executable once into volatile RAM, keeping parameters hot for sub-millisecond weight processing.
+- **De-duplicated Vocabulary Index [PR #3]:** Strict index constraints that prevent dictionary collisions between base characters and custom subword syllables, matching your active vocabulary size perfectly to your low-level parameters.
+- **Data-Integrity Regex node [PR #1]:** Enforces a catch-all pattern filter and `re.DOTALL` parsing masks, ensuring unknown punctuation loops safely into `[UNK]` slots instead of dropping out.
+- **Numerically Stable Softmax [PR #2]:** Implementation of max-logit subtraction inside your activation matrices to permanently shield calculations from floating-point overflow and `NaN` failures under low temperatures.
+- **Multi-Tenant Memory Sandboxing [Phase J]:** Full dictionary lookback isolation mapping rows keyed to unique session tokens, allowing multiple characters to generate separate screenplay tracks simultaneously inside RAM without data pollution.
+- **Decoupled Three-File Asset Pipeline:** Clean architectural separation of presentation layers (`index.html`), styling layouts (`style.css`), and core logic runtime engines (`app.js`).
+
+---
+
+## 📂 System Specifications Vault Map
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Technical specifications detailing the C++ neural gate and interprocess communication loops.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Complete historical ledger tracking the development path from Milestone A to legacy completion.
+- [`docs/MANUAL.md`](docs/MANUAL.md) — Operational control guide for deploying local background daemons and adjusting sampling parameters.
+- [`docs/VISION.md`](docs/VISION.md) — The fundamental philosophy, systemic Tao, and future 3D roadmap parameters left for open-source expansion.

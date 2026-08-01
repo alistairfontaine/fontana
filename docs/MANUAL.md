@@ -12,10 +12,10 @@ g++ -std=c++17 backend/tensor_engine.cpp -o backend/tensor_engine_binary
 ### Terminal Tab 2: Deploy the FastAPI Gateway
 ```bash
 cd /media/mr-fontaine/R/RECOVERY/Coding/fontana
-export PYTHONPATH=PYTHONPATH:(pwd)/core && python3 -m uvicorn core.app:app --host 127.0.0.1 --port 8000 --reload
+export PYTHONPATH=\$PYTHONPATH:(pwd)/core && python3 -m uvicorn core.app:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### Terminal Tab 3: Launch the Front-End Control Panel
+### Terminal Tab 3: Launch the Front-End Control Panel Directory
 ```bash
 cd /media/mr-fontaine/R/RECOVERY/Coding/fontana/core
 python3 -m http.server 8080
@@ -38,3 +38,11 @@ The Stochastic Synthesis panel provides real-time mathematical authority straigh
 ### C. Nucleus Sampling Top-P Boundary Slider
 - **Range Bounds:** `0.10` to `1.00` percentage gates.
 - **Behavior Mapping:** Truncates the cumulative probability distribution matrix. The model dynamically tracks sorting structures and cuts off all candidate tokens the exact millisecond their combined weight crosses your specified threshold, slicing away low-probability noise patterns.
+
+---
+
+## 3. Operating the Thread-Isolated Sandbox Scratchpad Window
+To test individual data trajectories or query custom vocabulary strings without corrupting your active screenplay writing session log tracks, scroll to the bottom of the interface panel to the **Thread-Isolated Scratchpad Gateway**:
+1. Type any arbitrary token query string into the input field.
+2. Click **"Launch Sandbox"**.
+3. The response will process independently through the air-gapped `isolated_scratch_lane` network key, leaving your primary rolling history log completely untouched.
