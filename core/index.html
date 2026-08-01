@@ -183,7 +183,6 @@
 
 
 
-
             <div class="vamp-card">
                 <h2>// DIALOGUE HARVESTER</h2>
                 <label>Ingest Multi-Source Text Coordinates:</label>
@@ -193,6 +192,18 @@
                     <button onclick="triggerTraining()" class="btn-harvester">Commit Tracks</button>
                 </div>
                 <div class="opium-output" id="trainingOutput">Awaiting text trajectory data stream blocks...</div>
+            </div>
+
+            <!-- NEW PHASE U ASYNCHRONOUS THREAD-ISOLATED SCRATCHPAD COMMAND VAULT -->
+            <div class="vamp-card" style="margin-top: 40px;">
+                <h2>// THREAD-ISOLATED SCRATCHPAD GATEWAY</h2>
+                <label>Execute Air-Gapped Sandboxed Prompt:</label>
+                <input type="text" id="scratchpadInput" placeholder="Enter isolated token query here...">
+
+                <div class="btn-wrapper">
+                    <button onclick="triggerScratchpadPass()" class="btn-harvester" style="background-color: transparent; border-color: #444444; color: #ffffff;">Launch Sandbox</button>
+                </div>
+                <div class="opium-output" id="scratchpadOutput" style="border-left: 3px solid #444444;">Awaiting air-gapped non-blocking execution signal...</div>
             </div>
         </div>
     </div>
@@ -460,9 +471,39 @@
             });
         }
 
+        // FIXED: PHASE U ASYNCHRONOUS THREAD-ISOLATED SCRATCHPAD CONTROLLER LOOP
+        async function triggerScratchpadPass() {
+            const outBox = document.getElementById("scratchpadOutput");
+            outBox.innerHTML = "<span style='color: #666666;'>Processing air-gapped memory thread lane...</span>";
+
+            try {
+                const response = await fetch(`${API_BASE}/v1/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        seed: document.getElementById("scratchpadInput").value,
+                        max_tokens: 30, // Localized short-burst parameter length
+                        session_id: "isolated_scratch_lane", // FIXED: FORCE AIR-GAPPED STATE ROUTING CHANNEL
+                        temperature: parseFloat(document.getElementById("tempInput").value),
+                        top_k: parseInt(document.getElementById("topkInput").value),
+                        top_p: parseFloat(document.getElementById("toppInput").value)
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    outBox.innerText = data.completed_text;
+                } else {
+                    outBox.innerText = `❌ CHANNEL ERROR: ${data.detail}`;
+                }
+            } catch (err) {
+                outBox.innerText = `❌ BUS SECTOR BREAK: ${err.message}`;
+            }
+        }
+
 
 
 
     </script>
+
 </body>
 </html>
