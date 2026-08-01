@@ -1,0 +1,102 @@
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000000;
+            color: #ffffff;
+            padding: 50px 20px;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        .vault-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000000;
+            border: 3px solid #ffffff;
+            padding: 40px;
+            position: relative;
+        }
+        h1 {
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            color: #ffffff;
+            border-bottom: 3px solid #ffffff;
+            padding-bottom: 15px;
+            margin-top: 0;
+            font-size: 26px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        h2 {
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            color: #00ff66;
+            font-size: 15px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .matrix-grid { display: grid; grid-template-columns: 1fr; gap: 40px; margin-top: 30px; }
+        .vamp-card {
+            background: #050505;
+            border: 1px solid #222222;
+            border-radius: 0px;
+            padding: 30px;
+        }
+        .vamp-card:hover {
+            border-color: #00ff66;
+        }
+        .status-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #111111;
+            padding: 12px 20px;
+            margin-bottom: 35px;
+            border: 1px solid #222222;
+            border-left: 6px solid #00ff66;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .status-badge { font-weight: bold; color: #00ff66; }
+        label { display: block; font-weight: bold; margin-bottom: 10px; color: #666666; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        input[type="text"], textarea, input[type="number"] {
+            width: 100%; padding: 14px; background: #000000; color: #ffffff;
+            border: 1px solid #222222; border-radius: 0px; box-sizing: border-box;
+            font-family: 'Courier New', monospace; margin-bottom: 20px; font-size: 14px;
+            font-weight: bold;
+        }
+        input[type="text"]:focus, textarea:focus { border-color: #00ff66; outline: none; background: #000000; color: #00ff66; }
+        .btn-wrapper { display: flex; justify-content: flex-end; gap: 15px; }
+        button {
+            background: #000000; color: #000000; border: 2px solid #ffffff;
+            background-color: #ffffff;
+            border-radius: 0px; padding: 14px 32px; cursor: pointer;
+            font-family: 'Courier New', monospace; font-weight: 900; font-size: 13px;
+            text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;
+        }
+        button:hover { background: #000000; color: #ffffff; border-color: #ffffff; }
+        .btn-harvester { background-color: #00ff66; border-color: #00ff66; color: #000000; }
+        .btn-harvester:hover { background: #000000; color: #00ff66; border-color: #00ff66; }
+        .btn-export { background-color: #007bff; border-color: #007bff; color: #ffffff; }
+        .btn-export:hover { background: #000000; color: #007bff; border-color: #007bff; }
+                .opium-output {
+            background: #000000; border: 1px solid #222222; padding: 20px;
+            border-radius: 0px; white-space: pre-wrap; color: #ffffff;
+            min-height: 50px; margin-top: 20px; font-size: 14px; line-height: 1.6;
+            border-left: 3px solid #ffffff;
+        }
+
+        /* NEW OVERRIDES FOR THEME TOGGLE */
+        .btn-toggle { background-color: #444444; border-color: #444444; color: #ffffff; }
+        .btn-toggle:hover { background: #000000; color: #ffffff; border-color: #ffffff; }
+
+        .theme-opium h2 { color: #ff0055; }
+        .theme-opium .vamp-card:hover { border-color: #ff0055; }
+        .theme-opium .status-strip { border-left: 6px solid #ff0055; }
+        .theme-opium .status-badge { color: #ff0055; }
+        .theme-opium input[type="text"]:focus, .theme-opium textarea:focus { border-color: #ff0055; color: #ff0055; outline: none; }
+        .theme-opium .btn-harvester { background-color: #ff0055; border-color: #ff0055; color: #000000; }
+        .theme-opium .btn-harvester:hover { background: #000000; color: #ff0055; border-color: #ff0055; }
